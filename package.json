@@ -1,0 +1,14 @@
+{
+  "name": "food-delivery",
+  "version": "1.0.0",
+  "description": "",
+  "author": "mohamed nassar",
+  "scripts": {
+    "dev:api": "npm run dev --prefix api",
+    "dev:client": "npm run dev --prefix web",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:client\""
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}
