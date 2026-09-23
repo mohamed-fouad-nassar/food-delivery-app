@@ -1,17 +1,307 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+// USER Model
+enum UserRole {
+  ADMIN
+  CUSTOMER
+  RESTAURANT_OWNER
+  DELIVERY
+}
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   email     String   @unique
   password  String
-  name      String?
+  firstName      String?
+  lastName      String?
+  phoneNumber String @unique
+  role UserRole @default(CUSTOMER)
+  status UserStatus @default(PENDING)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  foodReviews FoodReview[]
+  deliveryReviews DeliveryReview[]
+
+  addresses Address[]
+  deliveryProfile DeliveryProfile?
+  restaurant Restaurant?
+  orders Order[]
+
+  @@map("users")
+}
+
+// ADDRESS Model
+model Address {
+  id String @id @default(uuid())
+  name String
+  street String
+  city String
+  state String
+  lat       Decimal @db.Decimal(8, 6)
+  lng       Decimal @db.Decimal(9, 6)
+  isDefault Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders Order[]
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([name, userId])
+  @@unique([userId], where: { isDefault: true }, map: "unique_default_per_user")
+  @@map("addresses")
+}
+
+// DELIVERY PROFILE Model
+enum DeliveryProfileStatus {
+  PENDING
+  OFFLINE
+  AVAILABLE
+  BUSY
+}
+model DeliveryProfile {
+  id String @id @default(uuid())
+  vehicleType String
+  lat       Decimal @db.Decimal(8, 6)
+  lng       Decimal @db.Decimal(9, 6)
+  rating      Decimal? @db.Decimal(2, 1)
+  reviewCount Int      @default(0)
+  status DeliveryProfileStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders Order[]
+  deliveryReviews DeliveryReview[]
+
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@map("deliveryProfiles")
+}
+
+// RESTAURANT Model
+enum RestaurantStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+model Restaurant {
+  id String @id @default(uuid())
+  name String
+  type String
+  description String?
+  isOpen Boolean @default(false)
+  logoUrl String?
+  coverUrl String?
+  street String
+  city String
+  state String
+  lat       Decimal @db.Decimal(8, 6)
+  lng       Decimal @db.Decimal(9, 6)
+  status RestaurantStatus @default(PENDING)
+  rating      Decimal? @db.Decimal(2, 1)
+  reviewCount Int      @default(0)
+  operationHours Json?
+  menuCategories MenuCategory[]
+  paymentMethods RestaurantPaymentMethod[]
+  orders Order[]
+  foodReviews FoodReview[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@map("restaurants")
+}
+
+// MENU CATEGORY Model
+enum MenuCategoryStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+model MenuCategory {
+  id String @id @default(uuid())
+  name String
+  displayOrder Int
+  status MenuCategoryStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  menuItems MenuItem[]
+
+  restaurantId String
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+
+  @@unique([name, restaurantId])
+  @@map("menuCategories")
+}
+
+// MENU ITEM Model
+model MenuItem {
+  id String @id @default(uuid())
+  name String
+  description String
+  unitPrice Decimal @db.Decimal(10, 2)
+  imgUrl String?
+  isActive Boolean @default(true)
+  prepTimeMinutes Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orderItems OrderItem[]
+
+  menuCategoryId String
+  menuCategory MenuCategory @relation(fields: [menuCategoryId], references: [id], onDelete: Restrict)
+
+  @@unique([name, menuCategoryId])
+  @@map("menuItems")
+}
+
+// PAYMENT METHOD Model
+model PaymentMethod {
+  id String @id @default(uuid())
+  name String
+  code String @unique
+  isActive Boolean @default(false)
+  createdAt DateTime @default(now())
+  orders Order[]
+  restaurantPaymentMethods RestaurantPaymentMethod[]
+
+  @@map("paymentMethods")
+}
+
+// RESTAURANT PAYMENT METHOD Model
+model RestaurantPaymentMethod {
+  id String @id @default(uuid())
+  isActive Boolean @default(true)
+
+  restaurantId String
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  paymentMethodId String
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+
+  @@unique([restaurantId, paymentMethodId])
+  @@map("restaurantPaymentMethods")
+}
+
+// ORDER Model
+enum PaymentStatus {
+  PAID
+  UNPAID
+  REFUNDED
+  REJECTED
+}
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PREPARING
+  READY
+  PICKED
+  DELIVERED
+  CANCELLED
+  REJECTED
+}
+model Order {
+  id String @id @default(uuid())
+  status OrderStatus @default(PENDING)
+  notes String?
+  subtotal Decimal @db.Decimal(10, 2)
+  tax Decimal @db.Decimal(10, 2) @default(0)
+  deliveryFee Decimal @db.Decimal(10, 2) @default(0)
+  totalPrice Decimal @db.Decimal(10, 2)
+  estPrepareMinutes Int
+  estDeliveryMinutes Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  acceptedAt DateTime?
+  pickedAt DateTime?
+  deliveredAt DateTime?
+  deliveryAddress String
+  deliveryLat       Decimal @db.Decimal(8, 6)
+  deliveryLng       Decimal @db.Decimal(9, 6)
+  paymentStatus PaymentStatus @default(UNPAID)
+  orderItems OrderItem[]
+  foodReviews FoodReview[]
+  deliveryReviews DeliveryReview[]
+
+  paymentMethodId String
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  restaurantId String
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  addressId String
+  address Address @relation(fields: [addressId], references: [id], onDelete: Restrict)
+  deliveryProfileId String?
+  deliveryProfile DeliveryProfile? @relation(fields: [deliveryProfileId], references: [id], onDelete: Restrict)
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([restaurantId, status])
+  @@index([userId, createdAt])
+  @@index([deliveryProfileId, status])
+  @@map("orders")
+}
+
+// ORDER ITEM Model
+model OrderItem {
+  id String @id @default(uuid())
+  name String
+  description String
+  unitPrice Decimal @db.Decimal(10, 2)
+  qty Int @default(1)
+  totalPrice Decimal @db.Decimal(10, 2)
+
+  menuItemId  String
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+  orderId String
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@map("orderItems")
+}
+
+// FOOD REVIEW Model
+model FoodReview {
+  id String @id @default(uuid())
+  comment String?
+  rating Int
+  createdAt DateTime @default(now())
+
+  orderId String @unique
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  restaurantId String
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("foodReviews")
+}
+
+//  DELIVERY REVIEW Model
+model DeliveryReview {
+  id String @id @default(uuid())
+  comment String?
+  rating Int
+  createdAt DateTime @default(now())
+
+  orderId String @unique
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  deliveryProfileId String
+  deliveryProfile DeliveryProfile @relation(fields: [deliveryProfileId], references: [id], onDelete: Restrict)
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("deliveryReviews")
 }
