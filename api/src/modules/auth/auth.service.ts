@@ -7,11 +7,11 @@ import {
   generateVerificationToken,
 } from "../../common/utils/token";
 import { prisma } from "../../db";
-import type { RegisterUserDto } from "./auth.types";
 import { HttpError } from "../../common/utils/http";
 import { UserStatus } from "../../generated/prisma/enums";
 import { httpStatus } from "../../common/types/http-status";
 import { sendVerificationEmail } from "../../common/utils/email";
+import type { LoginUserDto, RegisterUserDto } from "./auth.types";
 import { userRole, type UserRole } from "../../common/types/user-role";
 export class AuthService {
   static async register(data: RegisterUserDto) {
@@ -19,6 +19,7 @@ export class AuthService {
 
     const isUserExists = await prisma.user.findFirst({
       where: { OR: [{ email }, { phoneNumber }] },
+      omit: { password: true },
     });
 
     if (isUserExists)
@@ -40,6 +41,7 @@ export class AuthService {
         phoneNumber,
         password: hashedPassword,
       },
+      omit: { password: true },
     });
 
     const emailVerificationToken = generateVerificationToken(
@@ -56,8 +58,30 @@ export class AuthService {
     return newUser;
   }
 
-  static login() {
-    console.log("Login is Here... 🚀");
+  static async login(data: LoginUserDto) {
+    const { email, password } = data;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !(await bcrypt.compare(password, user?.password)))
+      throw new HttpError(401, httpStatus.FAIL, "Invalid credentials");
+
+    if (user.status === UserStatus.PENDING)
+      throw new HttpError(
+        401,
+        httpStatus.FAIL,
+        "Email not active. Please verify your email",
+      );
+
+    if (user.status === UserStatus.SUSPENDED)
+      throw new HttpError(
+        401,
+        httpStatus.FAIL,
+        "Yor email is suspended right now. Contact technical support team",
+      );
+
+    const { token, refreshToken } = this.generateUserTokens(user.id, user.role);
+    const { password: userPassword, ...userData } = user;
+
+    return { user: userData, token, refreshToken };
   }
 
   static logout() {
@@ -87,7 +111,10 @@ export class AuthService {
     const decoded = verifyVerificationToken(verifyToken);
     const { id: userId, email } = decoded;
 
-    let user = await prisma.user.findFirst({ where: { id: userId } });
+    let user = await prisma.user.findFirst({
+      where: { id: userId },
+      omit: { password: true },
+    });
     if (!user) throw new HttpError(404, httpStatus.FAIL, "User not founded!");
     if (user.email !== email)
       throw new HttpError(400, httpStatus.FAIL, "Token mismatch!");
@@ -97,11 +124,11 @@ export class AuthService {
     user = await prisma.user.update({
       where: { id: user.id },
       data: { status: UserStatus.ACTIVE },
+      omit: { password: true },
     });
-    let { password, ...userData } = user;
     const { token, refreshToken } = this.generateUserTokens(user.id, user.role);
 
-    return { user: { ...userData }, token, refreshToken };
+    return { user, token, refreshToken };
   }
 
   static generateUserTokens(id: string, role: UserRole) {

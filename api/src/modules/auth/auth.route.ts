@@ -6,6 +6,7 @@ import {
   register,
   refreshToken,
   resetPassword,
+  getCurrentUser,
   verifyUserEmail,
   requestResetPasswordToken,
 } from "./auth.controller";
@@ -21,5 +22,6 @@ router.post("/refresh", refreshToken);
 router.post("/forget-password", requestResetPasswordToken);
 router.post("/reset-password", resetPassword);
 router.post("/verify", verifyUserEmail);
+router.get("/current-user", getCurrentUser);
 
 export default router;

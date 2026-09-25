@@ -8,3 +8,8 @@ export interface RegisterUserDto {
   lastName?: string;
   role: RegistrationUserRoles;
 }
+
+export interface LoginUserDto {
+  email: string;
+  password: string;
+}

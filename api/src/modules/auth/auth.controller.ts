@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
 
 import { AuthService } from "./auth.service";
-import type { RegisterUserDto } from "./auth.types";
+import appConfig from "../../common/config/app.configs";
 import { catchAsync } from "../../common/utils/catch-async";
 import { httpStatus } from "../../common/types/http-status";
-import appConfig from "../../common/config/app.configs";
+import type { LoginUserDto, RegisterUserDto } from "./auth.types";
 
 export const register = catchAsync(
   async (req: Request, res: Response, __: NextFunction) => {
@@ -19,9 +19,22 @@ export const register = catchAsync(
 );
 
 export const login = catchAsync(
-  (_: Request, res: Response, __: NextFunction) => {
-    AuthService.login();
-    res.json({ message: "Login is Here... 🚀" });
+  async (req: Request, res: Response, __: NextFunction) => {
+    const data: LoginUserDto = req.body;
+    const { user, token, refreshToken } = await AuthService.login(data);
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true, // Prevents client-side scripts from reading the token (Mitigates XSS)
+      secure: appConfig.node_env === "production", // Requires HTTPS in production
+      sameSite: "strict", // Protects against Cross-Site Request Forgery (CSRF)
+      maxAge: 7 * 24 * 60 * 60 * 1000, // max age in (ms) => 7 days
+    });
+
+    res.json({
+      status: httpStatus.SUCCESS,
+      message: `Welcome back, ${user.firstName}`,
+      data: { user, token },
+    });
   },
 );
 
@@ -69,10 +82,13 @@ export const verifyUserEmail = catchAsync(
     res.json({
       status: httpStatus.SUCCESS,
       message: "Email activated Successfully",
-      data: {
-        user,
-        token,
-      },
+      data: { user, token },
     });
+  },
+);
+
+export const getCurrentUser = catchAsync(
+  async (_: Request, res: Response, __: NextFunction) => {
+    res.json({ message: "Refresh Token is Here... 🚀" });
   },
 );
