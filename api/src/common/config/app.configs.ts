@@ -3,6 +3,7 @@ const appConfig = {
   cors_origin: process.env.CORS_ORIGIN as string,
   resend_api_key: process.env.RESEND_API_KEY as string,
   node_env: process.env.NODE_ENV as string,
+  app_url: process.env.APP_URL as string,
 };
 
 export default appConfig;

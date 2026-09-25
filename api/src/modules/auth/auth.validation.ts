@@ -1,4 +1,4 @@
-import { body, type ValidationChain } from "express-validator";
+import { body, query, type ValidationChain } from "express-validator";
 import { registrationUserRoles } from "../../common/types/user-role";
 
 export const registerRules: ValidationChain[] = [
@@ -43,4 +43,19 @@ export const loginRules: ValidationChain[] = [
   body("password")
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters"),
+];
+
+export const requestResetPasswordTokenRules: ValidationChain[] = [
+  body("email").isEmail().withMessage("Invalid email format").normalizeEmail(),
+];
+
+export const resetPasswordRules: ValidationChain[] = [
+  query("token").notEmpty().withMessage("Token must be provided"),
+  body("password")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters"),
+  body("confirmPassword").custom((value, { req }) => {
+    if (value !== req.body.password) throw new Error("Passwords do not match");
+    return true;
+  }),
 ];

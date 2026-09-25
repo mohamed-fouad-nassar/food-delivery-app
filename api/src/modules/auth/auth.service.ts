@@ -1,18 +1,20 @@
 import bcrypt from "bcryptjs";
-
 import {
+  sendVerificationEmail,
+  sendResetPasswordToken,
+} from "../../common/utils/email";
+import {
+  verifyToken,
   verifyRefreshToken,
   generateAccessToken,
   generateRefreshToken,
   verifyVerificationToken,
   generateVerificationToken,
-  verifyToken,
 } from "../../common/utils/token";
 import { prisma } from "../../db";
 import { HttpError } from "../../common/utils/http";
 import { UserStatus } from "../../generated/prisma/enums";
 import { httpStatus } from "../../common/types/http-status";
-import { sendVerificationEmail } from "../../common/utils/email";
 import type { LoginUserDto, RegisterUserDto } from "./auth.types";
 import { userRole, type UserRole } from "../../common/types/user-role";
 export class AuthService {
@@ -34,7 +36,7 @@ export class AuthService {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         role: role ?? userRole.CUSTOMER,
         email,
@@ -47,17 +49,12 @@ export class AuthService {
     });
 
     const emailVerificationToken = generateVerificationToken(
-      newUser.id,
-      newUser.email,
+      user.id,
+      user.email,
     );
+    sendVerificationEmail(user.firstName, user.email, emailVerificationToken);
 
-    sendVerificationEmail(
-      newUser.firstName,
-      newUser.email,
-      emailVerificationToken,
-    );
-
-    return newUser;
+    return user;
   }
 
   static async login(data: LoginUserDto) {
@@ -95,12 +92,44 @@ export class AuthService {
     return;
   }
 
-  static requestResetPasswordToken() {
-    console.log("Request Reset Password Token is Here... 🚀");
+  static async requestResetPasswordToken(email: string) {
+    const user = await prisma.user.findFirst({
+      where: { email },
+      omit: { password: true },
+    });
+    if (!user)
+      throw new HttpError(
+        400,
+        httpStatus.FAIL,
+        "No user found with this email",
+      );
+
+    const resetPasswordToken = generateVerificationToken(user.id, user.email);
+    sendResetPasswordToken(user.firstName, user.email, resetPasswordToken);
   }
 
-  static resetPassword() {
-    console.log("Reset Password is Here... 🚀");
+  static async resetPassword(password: string, resetPasswordToken: string) {
+    if (!resetPasswordToken)
+      throw new HttpError(
+        404,
+        httpStatus.FAIL,
+        "Reset password token is required",
+      );
+
+    const { id } = verifyVerificationToken(resetPasswordToken);
+    let user = await prisma.user.findFirst({
+      where: { id },
+      omit: { password: true },
+    });
+    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not founded!");
+
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
   }
 
   static async refreshToken(refreshToken: string) {

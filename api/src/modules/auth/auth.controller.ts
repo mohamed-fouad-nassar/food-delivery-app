@@ -49,16 +49,27 @@ export const logout = catchAsync(
 );
 
 export const requestResetPasswordToken = catchAsync(
-  (__: Request, res: Response, _: NextFunction) => {
-    AuthService.requestResetPasswordToken();
-    res.json({ message: "Request Reset Password Token is Here... 🚀" });
+  async (req: Request, res: Response, _: NextFunction) => {
+    const { email } = req.body;
+    await AuthService.requestResetPasswordToken(email);
+    res.json({
+      status: httpStatus.SUCCESS,
+      message: "Reset Password Email Sent Successfully",
+      data: null,
+    });
   },
 );
 
 export const resetPassword = catchAsync(
-  (__: Request, res: Response, _: NextFunction) => {
-    AuthService.resetPassword();
-    res.json({ message: "Reset Password is Here... 🚀" });
+  async (req: Request, res: Response, _: NextFunction) => {
+    const { password } = req.body;
+    const resetPasswordToken = req.query.token as string;
+    await AuthService.resetPassword(password, resetPasswordToken);
+    res.json({
+      status: httpStatus.SUCCESS,
+      message: "Password Updated Successfully",
+      data: null,
+    });
   },
 );
 
