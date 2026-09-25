@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 
 import {
+  verifyRefreshToken,
   generateAccessToken,
   generateRefreshToken,
   verifyVerificationToken,
@@ -90,7 +91,6 @@ export class AuthService {
       throw new HttpError(400, httpStatus.FAIL, "No Logged in user");
 
     console.log("refreshToken: ", refreshToken);
-
     return;
   }
 
@@ -102,8 +102,20 @@ export class AuthService {
     console.log("Reset Password is Here... 🚀");
   }
 
-  static refreshToken() {
-    console.log("Refresh Token is Here... 🚀");
+  static async refreshToken(refreshToken: string) {
+    if (!refreshToken)
+      throw new HttpError(401, httpStatus.FAIL, "No token provided");
+
+    const { id } = verifyRefreshToken(refreshToken);
+    const user = await prisma.user.findUnique({
+      where: { id },
+      omit: { password: true },
+    });
+    if (!user)
+      throw new HttpError(403, httpStatus.FAIL, "Invalid token provided");
+
+    const token = generateAccessToken(user.id, user.role);
+    return token;
   }
 
   static async verifyUserEmail(verifyToken: string) {
@@ -139,7 +151,7 @@ export class AuthService {
 
   static generateUserTokens(id: string, role: UserRole) {
     const token = generateAccessToken(id, role);
-    const refreshToken = generateRefreshToken(id, role);
+    const refreshToken = generateRefreshToken(id);
 
     return { token, refreshToken };
   }

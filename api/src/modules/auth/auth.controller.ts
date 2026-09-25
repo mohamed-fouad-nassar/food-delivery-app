@@ -32,7 +32,7 @@ export const login = catchAsync(
 
     res.json({
       status: httpStatus.SUCCESS,
-      message: `Welcome back, ${user.firstName}`,
+      message: `Welcome Back, ${user.firstName}`,
       data: { user, token },
     });
   },
@@ -63,9 +63,14 @@ export const resetPassword = catchAsync(
 );
 
 export const refreshToken = catchAsync(
-  (_: Request, res: Response, __: NextFunction) => {
-    AuthService.refreshToken();
-    res.json({ message: "Refresh Token is Here... 🚀" });
+  async (req: Request, res: Response, __: NextFunction) => {
+    const refreshToken = req.cookies.refreshToken;
+    const token = await AuthService.refreshToken(refreshToken);
+    res.json({
+      status: httpStatus.SUCCESS,
+      message: "Token Refreshed Successfully",
+      data: { token },
+    });
   },
 );
 
