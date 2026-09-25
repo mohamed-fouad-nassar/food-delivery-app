@@ -6,6 +6,10 @@ interface JwtPayload {
   id: string;
   role: UserRole;
 }
+interface JwtVerificationPayload {
+  id: string;
+  email: string;
+}
 
 export const generateAccessToken = (id: string, role: UserRole): string =>
   jwt.sign({ id, role }, authConfig.access_secret, {
@@ -17,8 +21,19 @@ export const generateRefreshToken = (id: string, role: UserRole): string =>
     expiresIn: authConfig.refresh_secret_expires_in as any,
   });
 
+export const generateVerificationToken = (id: string, email: string): string =>
+  jwt.sign({ id, email }, authConfig.email_verification_secret, {
+    expiresIn: "24h",
+  });
+
 export const verifyToken = (token: string) =>
   jwt.verify(token, authConfig.access_secret) as JwtPayload;
 
 export const verifyRefreshToken = (token: string) =>
   jwt.verify(token, authConfig.refresh_secret) as JwtPayload;
+
+export const verifyVerificationToken = (token: string) =>
+  jwt.verify(
+    token,
+    authConfig.email_verification_secret,
+  ) as JwtVerificationPayload;
