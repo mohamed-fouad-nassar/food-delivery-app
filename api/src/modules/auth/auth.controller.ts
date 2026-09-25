@@ -77,6 +77,14 @@ export const refreshToken = catchAsync(
   async (req: Request, res: Response, _: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
     const token = await AuthService.refreshToken(refreshToken);
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true, // Prevents client-side scripts from reading the token (Mitigates XSS)
+      secure: appConfig.node_env === "production", // Requires HTTPS in production
+      sameSite: "strict", // Protects against Cross-Site Request Forgery (CSRF)
+      maxAge: 7 * 24 * 60 * 60 * 1000, // max age in (ms) => 7 days
+    });
+
     res.json({
       status: httpStatus.SUCCESS,
       message: "Token Refreshed Successfully",

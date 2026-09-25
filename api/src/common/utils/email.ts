@@ -17,6 +17,7 @@ async function createMailTransporter() {
   return transporter;
 }
 
+// Auth Emails
 export async function sendVerificationEmail(
   name: string,
   email: string,
@@ -48,7 +49,6 @@ export async function sendVerificationEmail(
   console.log("Token: ", token);
   console.log("-----------------------------------------");
 }
-
 export async function sendResetPasswordToken(
   name: string,
   email: string,
