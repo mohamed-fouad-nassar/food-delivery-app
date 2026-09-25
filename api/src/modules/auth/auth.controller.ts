@@ -38,10 +38,13 @@ export const login = catchAsync(
   },
 );
 
+// @TODO: Add the refreshToken encrypted or plain in the user table and then remove it on logout.
 export const logout = catchAsync(
-  (_: Request, res: Response, __: NextFunction) => {
-    AuthService.logout();
-    res.json({ message: "Logout is Here... 🚀" });
+  async (req: Request, res: Response, __: NextFunction) => {
+    const refreshToken = req.cookies.refreshToken;
+    await AuthService.logout(refreshToken);
+    res.clearCookie("refreshToken");
+    res.json({ status: httpStatus.SUCCESS, message: "Good Bye!", data: null });
   },
 );
 

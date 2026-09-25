@@ -84,8 +84,14 @@ export class AuthService {
     return { user: userData, token, refreshToken };
   }
 
-  static logout() {
-    console.log("Logout is Here... 🚀");
+  // @TODO: Add the refreshToken encrypted or plain in the user table and then remove it on logout.
+  static async logout(refreshToken: string) {
+    if (!refreshToken)
+      throw new HttpError(400, httpStatus.FAIL, "No Logged in user");
+
+    console.log("refreshToken: ", refreshToken);
+
+    return;
   }
 
   static requestResetPasswordToken() {
