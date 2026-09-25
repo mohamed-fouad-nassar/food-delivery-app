@@ -7,7 +7,7 @@ import { httpStatus } from "../../common/types/http-status";
 import type { LoginUserDto, RegisterUserDto } from "./auth.types";
 
 export const register = catchAsync(
-  async (req: Request, res: Response, __: NextFunction) => {
+  async (req: Request, res: Response, _: NextFunction) => {
     const data: RegisterUserDto = req.body;
     const user = await AuthService.register(data);
     res.json({
@@ -19,7 +19,7 @@ export const register = catchAsync(
 );
 
 export const login = catchAsync(
-  async (req: Request, res: Response, __: NextFunction) => {
+  async (req: Request, res: Response, _: NextFunction) => {
     const data: LoginUserDto = req.body;
     const { user, token, refreshToken } = await AuthService.login(data);
 
@@ -40,7 +40,7 @@ export const login = catchAsync(
 
 // @TODO: Add the refreshToken encrypted or plain in the user table and then remove it on logout.
 export const logout = catchAsync(
-  async (req: Request, res: Response, __: NextFunction) => {
+  async (req: Request, res: Response, _: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
     await AuthService.logout(refreshToken);
     res.clearCookie("refreshToken");
@@ -49,21 +49,21 @@ export const logout = catchAsync(
 );
 
 export const requestResetPasswordToken = catchAsync(
-  (_: Request, res: Response, __: NextFunction) => {
+  (__: Request, res: Response, _: NextFunction) => {
     AuthService.requestResetPasswordToken();
     res.json({ message: "Request Reset Password Token is Here... 🚀" });
   },
 );
 
 export const resetPassword = catchAsync(
-  (_: Request, res: Response, __: NextFunction) => {
+  (__: Request, res: Response, _: NextFunction) => {
     AuthService.resetPassword();
     res.json({ message: "Reset Password is Here... 🚀" });
   },
 );
 
 export const refreshToken = catchAsync(
-  async (req: Request, res: Response, __: NextFunction) => {
+  async (req: Request, res: Response, _: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
     const token = await AuthService.refreshToken(refreshToken);
     res.json({
@@ -75,7 +75,7 @@ export const refreshToken = catchAsync(
 );
 
 export const verifyUserEmail = catchAsync(
-  async (req: Request, res: Response, __: NextFunction) => {
+  async (req: Request, res: Response, _: NextFunction) => {
     const verifyToken = req.query.token as string;
     const { user, token, refreshToken } =
       await AuthService.verifyUserEmail(verifyToken);
@@ -96,7 +96,14 @@ export const verifyUserEmail = catchAsync(
 );
 
 export const getCurrentUser = catchAsync(
-  async (_: Request, res: Response, __: NextFunction) => {
-    res.json({ message: "Refresh Token is Here... 🚀" });
+  async (req: Request, res: Response, _: NextFunction) => {
+    const authHeader = req.headers["authorization"];
+    const accessToken = authHeader && authHeader.split(" ")[1];
+    const user = await AuthService.getCurrentUser(accessToken);
+    res.json({
+      status: httpStatus.SUCCESS,
+      message: "User Fetched Successfully",
+      data: { user },
+    });
   },
 );

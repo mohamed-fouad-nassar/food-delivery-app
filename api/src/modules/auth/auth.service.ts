@@ -6,6 +6,7 @@ import {
   generateRefreshToken,
   verifyVerificationToken,
   generateVerificationToken,
+  verifyToken,
 } from "../../common/utils/token";
 import { prisma } from "../../db";
 import { HttpError } from "../../common/utils/http";
@@ -147,6 +148,21 @@ export class AuthService {
     const { token, refreshToken } = this.generateUserTokens(user.id, user.role);
 
     return { user, token, refreshToken };
+  }
+
+  static async getCurrentUser(accessToken?: string) {
+    if (!accessToken)
+      throw new HttpError(401, httpStatus.FAIL, "No token provided");
+
+    const { id } = verifyToken(accessToken);
+    const user = await prisma.user.findUnique({
+      where: { id },
+      omit: { password: true },
+    });
+    if (!user)
+      throw new HttpError(403, httpStatus.FAIL, "Invalid token provided");
+
+    return user;
   }
 
   static generateUserTokens(id: string, role: UserRole) {
