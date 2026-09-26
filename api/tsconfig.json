@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist",
+    "noEmit": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "target": "esnext",
@@ -19,5 +20,5 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "prisma.config.ts", "tsup.config.ts"]
 }
