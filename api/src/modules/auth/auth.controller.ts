@@ -38,7 +38,6 @@ export const login = catchAsync(
   },
 );
 
-// @TODO: Add the refreshToken encrypted or plain in the user table and then remove it on logout.
 export const logout = catchAsync(
   async (req: Request, res: Response, _: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;

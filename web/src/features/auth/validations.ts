@@ -5,6 +5,9 @@ export const userRoles = [
   { label: "Restaurant Owner", value: "RESTAURANT_OWNER" },
   { label: "Delivery", value: "DELIVERY" },
 ] as const;
+const userRolesValues = userRoles.map((u) => u.value);
+const userEnum = z.enum(userRolesValues);
+export type UserRole = z.infer<typeof userEnum>;
 
 export const registerSchema = z
   .object({
@@ -13,6 +16,12 @@ export const registerSchema = z
       .min(3, "First name must be at least 3 characters")
       .max(25, "First name cannot exceed 25 characters")
       .trim(),
+    lastName: z
+      .string("First name is required")
+      .min(3, "First name must be at least 3 characters")
+      .max(25, "First name cannot exceed 25 characters")
+      .trim()
+      .optional(),
     email: z
       .string()
       .min(1, "Email is required")
@@ -24,7 +33,7 @@ export const registerSchema = z
         /^01[0125][0-9]{8}$/,
         "Invalid Egyptian phone number. Must start with 010, 011, 012, or 015 and be 11 digits long",
       ),
-    role: z.string().min(1, "Please select a role."),
+    role: z.enum(userRolesValues),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -51,12 +60,24 @@ export const registerDefaultValues = {
   confirmPassword: "",
   role: userRoles.at(0)?.value,
 };
+export interface RegisterUserDto {
+  firstName: string;
+  lastName?: string;
+  email: string;
+  password: string;
+  phoneNumber: string;
+  role: UserRole;
+}
 
 export const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters."),
 });
 export const loginDefaultValues = {
-  email: "",
-  password: "",
+  email: "cust1@gmail.com",
+  password: "qwer1234",
 };
+export interface LoginUserDto {
+  email: string;
+  password: string;
+}

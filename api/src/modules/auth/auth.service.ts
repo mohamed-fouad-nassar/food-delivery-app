@@ -33,7 +33,7 @@ export class AuthService {
 
     if (isUserExists)
       throw new HttpError(
-        400,
+        409,
         httpStatus.FAIL,
         "User Already Exists with email or phone number",
       );
@@ -68,20 +68,25 @@ export class AuthService {
 
   static async login(data: LoginUserDto) {
     const { email, password } = data;
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !(await bcrypt.compare(password, user?.password)))
+    const user = await prisma.user.findUnique({
+      where: { email },
+      omit: { refreshTokenHash: true, refreshTokenExpiresAt: true },
+    });
+    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not found");
+
+    if (!(await bcrypt.compare(password, user?.password)))
       throw new HttpError(401, httpStatus.FAIL, "Invalid credentials");
 
     if (user.status === UserStatus.PENDING)
       throw new HttpError(
-        401,
+        403,
         httpStatus.FAIL,
         "Email not active. Please verify your email",
       );
 
     if (user.status === UserStatus.SUSPENDED)
       throw new HttpError(
-        401,
+        403,
         httpStatus.FAIL,
         "Yor email is suspended right now. Contact technical support team",
       );
@@ -103,7 +108,7 @@ export class AuthService {
 
   static async logout(refreshToken: string) {
     if (!refreshToken)
-      throw new HttpError(400, httpStatus.FAIL, "No Logged in user");
+      throw new HttpError(401, httpStatus.FAIL, "No Logged in user");
 
     const { id } = verifyRefreshToken(refreshToken);
     const user = await prisma.user.findUnique({
@@ -127,23 +132,18 @@ export class AuthService {
       where: { email },
       omit: { password: true },
     });
-    if (!user)
-      throw new HttpError(
-        400,
-        httpStatus.FAIL,
-        "No user found with this email",
-      );
+    if (!user) throw new HttpError(404, httpStatus.FAIL, "User Not Found");
 
     if (user.status === UserStatus.PENDING)
       throw new HttpError(
-        401,
+        403,
         httpStatus.FAIL,
         "Email not active. Please verify your email",
       );
 
     if (user.status === UserStatus.SUSPENDED)
       throw new HttpError(
-        401,
+        403,
         httpStatus.FAIL,
         "Yor email is suspended right now. Contact technical support team",
       );
@@ -178,7 +178,7 @@ export class AuthService {
       where: { id },
       omit: { password: true },
     });
-    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not founded!");
+    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not found");
     if (hashToken(resetPasswordToken) !== user.passwordResetTokenHash)
       throw new HttpError(
         400,
@@ -186,11 +186,11 @@ export class AuthService {
         "Reset password token miss match",
       );
     if (user.status !== UserStatus.ACTIVE)
-      throw new HttpError(400, httpStatus.FAIL, "User account must be active");
+      throw new HttpError(403, httpStatus.FAIL, "User account must be active");
 
     const expiresAt = user.passwordResetTokenExpiresAt;
     if (!expiresAt || expiresAt <= new Date())
-      throw new HttpError(400, httpStatus.FAIL, "Reset password token expired");
+      throw new HttpError(403, httpStatus.FAIL, "Reset password token expired");
 
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -215,9 +215,9 @@ export class AuthService {
       omit: { password: true },
     });
     if (!user || hashToken(refreshToken) !== user.refreshTokenHash)
-      throw new HttpError(403, httpStatus.FAIL, "Invalid token provided");
+      throw new HttpError(400, httpStatus.FAIL, "Invalid token provided");
     if (user.status !== UserStatus.ACTIVE)
-      throw new HttpError(400, httpStatus.FAIL, "User account must be active");
+      throw new HttpError(403, httpStatus.FAIL, "User account must be active");
 
     const expiresAt = user.refreshTokenExpiresAt;
     if (!expiresAt || expiresAt <= new Date())
@@ -255,7 +255,7 @@ export class AuthService {
       where: { id: userId },
       omit: { password: true },
     });
-    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not founded!");
+    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not found");
     if (user.email !== email)
       throw new HttpError(400, httpStatus.FAIL, "Token mismatch!");
     if (user.status !== UserStatus.PENDING)
@@ -279,7 +279,7 @@ export class AuthService {
 
   static async getCurrentUser(accessToken?: string) {
     if (!accessToken)
-      throw new HttpError(401, httpStatus.FAIL, "No token provided");
+      throw new HttpError(404, httpStatus.FAIL, "No token provided");
 
     const { id } = verifyToken(accessToken);
     const user = await prisma.user.findUnique({
@@ -287,7 +287,7 @@ export class AuthService {
       omit: { password: true },
     });
     if (!user)
-      throw new HttpError(403, httpStatus.FAIL, "Invalid token provided");
+      throw new HttpError(401, httpStatus.FAIL, "Invalid token provided");
 
     return user;
   }

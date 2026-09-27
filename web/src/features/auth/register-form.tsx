@@ -39,6 +39,7 @@ import {
 } from "@/features/auth/validations";
 import { Button } from "@/components/ui/button";
 import SubmitBtn from "@/components/submit-btn";
+import { register } from "@/features/auth/api";
 
 export function RegisterForm({ className }: { className?: string }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -48,8 +49,8 @@ export function RegisterForm({ className }: { className?: string }) {
     defaultValues: registerDefaultValues,
   });
 
-  function onSubmit(data: z.infer<typeof registerSchema>) {
-    console.log(data);
+  async function onSubmit(data: z.infer<typeof registerSchema>) {
+    await register(data);
   }
 
   return (

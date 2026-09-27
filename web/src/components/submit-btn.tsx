@@ -1,6 +1,7 @@
-import { ArrowRight, LoaderCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function SubmitBtn({
   title,
@@ -19,7 +20,7 @@ export default function SubmitBtn({
     >
       {isPending ? (
         <>
-          <LoaderCircle className="animate-spin" />
+          <Spinner />
           <span>{pendingTitle}</span>
         </>
       ) : (

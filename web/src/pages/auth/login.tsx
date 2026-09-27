@@ -6,7 +6,7 @@ export default function Login() {
     <>
       <AuthHeader
         title="Welcome Back"
-        description="Sign in to savor culinary excellence delivered to your door"
+        description="Login to savor culinary excellence delivered to your door."
       />
       <LoginForm />
       <AuthFooter

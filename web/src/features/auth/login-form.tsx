@@ -19,18 +19,20 @@ import {
 } from "@/components/ui/input-group";
 import { Button } from "@/components/ui/button";
 import SubmitBtn from "@/components/submit-btn";
+import { useLogin } from "@/features/auth/useLogin";
 import { loginDefaultValues, loginSchema } from "@/features/auth/validations";
 
 export function LoginForm({ className }: { className?: string }) {
   const [showPassword, setShowPassword] = useState(false);
+  const { login, isPending } = useLogin();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: loginDefaultValues,
   });
 
-  function onSubmit(data: z.infer<typeof loginSchema>) {
-    console.log(data);
+  async function onSubmit(data: z.infer<typeof loginSchema>) {
+    login(data);
   }
 
   return (
@@ -109,7 +111,7 @@ export function LoginForm({ className }: { className?: string }) {
 
       <SubmitBtn
         title="Login"
-        isPending={false}
+        isPending={isPending}
         pendingTitle="Logging you in..."
       />
     </form>

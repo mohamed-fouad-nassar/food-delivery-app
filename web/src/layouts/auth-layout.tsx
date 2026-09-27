@@ -44,7 +44,7 @@ function AuthPlaceHolder() {
 
         <div className="flex flex-col gap-6">
           <Badge className="text-base p-3">CURATED DINNING EXPERIENCE</Badge>
-          <h2 className="text-5xl font-medium w-[80%] leading-14">
+          <h2 className="text-5xl font-medium leading-14">
             Unlock exclusive tables, private chef pop-ups, and tasting menus at
             your residence.
           </h2>
