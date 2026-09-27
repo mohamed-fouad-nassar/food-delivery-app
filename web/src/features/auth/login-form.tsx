@@ -18,30 +18,24 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Button } from "@/components/ui/button";
-
-const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8, "Password must be at least 8 characters."),
-});
+import SubmitBtn from "@/components/submit-btn";
+import { loginDefaultValues, loginSchema } from "@/features/auth/validations";
 
 export function LoginForm({ className }: { className?: string }) {
   const [showPassword, setShowPassword] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: loginDefaultValues,
   });
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  function onSubmit(data: z.infer<typeof loginSchema>) {
     console.log(data);
   }
 
   return (
     <form
-      className={cn("flex flex-col gap-6", className)}
+      className={cn("flex flex-col gap-4", className)}
       onSubmit={form.handleSubmit(onSubmit)}
     >
       <FieldGroup>
@@ -50,7 +44,9 @@ export function LoginForm({ className }: { className?: string }) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel htmlFor="email">
+                Email <span className="text-destructive">*</span>
+              </FieldLabel>
               <InputGroup>
                 <InputGroupInput
                   {...field}
@@ -74,7 +70,9 @@ export function LoginForm({ className }: { className?: string }) {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <div className="flex items-center">
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldLabel htmlFor="password">
+                  Password <span className="text-destructive">*</span>
+                </FieldLabel>
                 <Link
                   to="/auth/forget-password"
                   className="ml-auto text-sm underline-offset-4 hover:underline"
@@ -109,7 +107,11 @@ export function LoginForm({ className }: { className?: string }) {
         />
       </FieldGroup>
 
-      <Button type="submit">Login</Button>
+      <SubmitBtn
+        title="Login"
+        isPending={false}
+        pendingTitle="Logging you in..."
+      />
     </form>
   );
 }

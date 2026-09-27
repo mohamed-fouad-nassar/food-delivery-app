@@ -5,8 +5,8 @@ export default function Login() {
   return (
     <>
       <AuthHeader
-        title="Login to your account"
-        description="Enter your email, and password below to login to your account"
+        title="Welcome Back"
+        description="Sign in to savor culinary excellence delivered to your door"
       />
       <LoginForm />
       <AuthFooter

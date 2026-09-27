@@ -3,14 +3,14 @@ import { CheckCircle2, ArrowUpRightFromSquare } from "lucide-react";
 
 import Logo from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
-import { ModeToggle } from "@/components/mode-toggle";
+import ModeToggle from "@/components/mode-toggle";
 
 export default function AuthLayout() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <AuthPlaceHolder />
 
-      <section className="flex flex-col gap-4 p-6 md:p-10">
+      <section className="max-w-5xl mx-auto w-full flex flex-col gap-4 py-4 px-6 md:px-10">
         <header className="flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2 font-medium">
             <Logo />
