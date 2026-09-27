@@ -5,8 +5,8 @@
     "strings": true
   },
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit",
-    "source.fixAll.oxc": "always"
+    "source.organizeImports": "never",
+    "source.fixAll.oxc": "never"
   },
 
   "js/ts.suggest.enabled": true,
