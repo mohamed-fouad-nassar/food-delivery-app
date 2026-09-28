@@ -1,5 +1,7 @@
 import z from "zod";
 
+import type { LoginFormValues } from "@/features/auth/types";
+
 export const userRoles = [
   { label: "Customer", value: "CUSTOMER" },
   { label: "Restaurant Owner", value: "RESTAURANT_OWNER" },
@@ -73,11 +75,7 @@ export const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters."),
 });
-export const loginDefaultValues = {
+export const loginDefaultValues: LoginFormValues = {
   email: "",
   password: "",
 };
-export interface LoginUserDto {
-  email: string;
-  password: string;
-}

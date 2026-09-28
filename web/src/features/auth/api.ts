@@ -1,11 +1,14 @@
-import { api } from "@/lib/api";
 import type {
-  LoginUserDto,
-  RegisterUserDto,
-} from "@/features/auth/validations";
+  LoginFormValues,
+  LoginSuccessResponse,
+} from "@/features/auth/types";
+import { api } from "@/lib/api";
+import type { RegisterUserDto } from "@/features/auth/validations";
 
-export async function loginApi(data: LoginUserDto) {
-  const res = await api.post("/auth/login", data);
+export async function loginApi(
+  credentials: LoginFormValues,
+): Promise<LoginSuccessResponse> {
+  const res = await api.post<LoginSuccessResponse>("/auth/login", credentials);
   return res.data;
 }
 

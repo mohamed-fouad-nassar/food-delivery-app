@@ -1,8 +1,9 @@
-import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { getAxiosErrorMsg } from "@/lib/api";
 import { toast } from "@/components/ui/toast";
 import { loginApi } from "@/features/auth/api";
+import { QUERY_KEYS } from "@/lib/react-query";
 
 export function useLogin() {
   const queryClient = useQueryClient();
@@ -10,17 +11,13 @@ export function useLogin() {
   const { mutate: login, isPending } = useMutation({
     mutationFn: loginApi,
     onSuccess: (res) => {
+      queryClient.setQueryData(QUERY_KEYS.user, res.data);
       toast.add({ type: "success", description: res.message });
-      queryClient.setQueryData(["user"], res.data);
       // @TODO: add navigation to target based on the user role in the response
     },
-    onError: (err) => {
-      if (axios.isAxiosError(err))
-        toast.add({
-          type: "error",
-          description: err.response?.data.message as string,
-        });
-      else toast.add({ type: "error", description: err.message });
+    onError: (err: unknown) => {
+      const message = getAxiosErrorMsg(err);
+      toast.add({ type: "error", description: message });
     },
   });
 

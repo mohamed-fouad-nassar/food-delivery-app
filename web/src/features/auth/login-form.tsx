@@ -1,8 +1,6 @@
-import z from "zod";
 import { cn } from "cn";
 import { useState } from "react";
 import { Link } from "react-router";
-import { isAxiosError } from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { EyeIcon, EyeOffIcon, Lock, MailIcon } from "lucide-react";
@@ -20,30 +18,24 @@ import {
 } from "@/components/ui/input-group";
 import { Button } from "@/components/ui/button";
 import SubmitBtn from "@/components/submit-btn";
+import { handleValidationErrors } from "@/lib/api";
 import { useLogin } from "@/features/auth/useLogin";
-import { loginDefaultValues, loginSchema } from "@/features/auth/validations";
+import type { LoginFormValues } from "@/features/auth/types";
+import { loginSchema, loginDefaultValues } from "@/features/auth/validations";
 
 export function LoginForm({ className }: { className?: string }) {
   const [showPassword, setShowPassword] = useState(false);
   const { login, isPending } = useLogin();
 
-  const form = useForm<z.infer<typeof loginSchema>>({
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: loginDefaultValues,
   });
 
-  async function onSubmit(data: z.infer<typeof loginSchema>) {
-    login(data, {
-      onError: (err) => {
-        if (!isAxiosError(err)) return;
-        const errors = Object.entries(err.response?.data.data.errors);
-        errors.map((errArr) => {
-          form.setError(errArr[0] as any, {
-            type: "server",
-            message: errArr[1] as any,
-          });
-        });
-      },
+  async function onSubmit(credentials: LoginFormValues) {
+    form.clearErrors();
+    login(credentials, {
+      onError: (err) => handleValidationErrors<LoginFormValues>(form, err),
     });
   }
 
