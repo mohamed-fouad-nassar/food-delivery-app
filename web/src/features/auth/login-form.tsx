@@ -32,7 +32,7 @@ export function LoginForm({ className }: { className?: string }) {
     defaultValues: loginDefaultValues,
   });
 
-  async function onSubmit(credentials: LoginFormValues) {
+  function onSubmit(credentials: LoginFormValues) {
     form.clearErrors();
     login(credentials, {
       onError: (err) => handleValidationErrors<LoginFormValues>(form, err),

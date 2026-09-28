@@ -62,14 +62,6 @@ export const registerDefaultValues = {
   confirmPassword: "",
   role: userRoles.at(0)?.value,
 };
-export interface RegisterUserDto {
-  firstName: string;
-  lastName?: string;
-  email: string;
-  password: string;
-  phoneNumber: string;
-  role: UserRole;
-}
 
 export const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),

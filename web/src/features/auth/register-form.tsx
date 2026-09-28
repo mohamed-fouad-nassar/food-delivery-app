@@ -1,4 +1,3 @@
-import z from "zod";
 import {
   Lock,
   Phone,
@@ -39,18 +38,24 @@ import {
 } from "@/features/auth/validations";
 import { Button } from "@/components/ui/button";
 import SubmitBtn from "@/components/submit-btn";
-import { register } from "@/features/auth/api";
+import { handleValidationErrors } from "@/lib/api";
+import { useRegister } from "@/features/auth/useRegister";
+import type { RegisterFormValues } from "@/features/auth/types";
 
 export function RegisterForm({ className }: { className?: string }) {
   const [showPassword, setShowPassword] = useState(false);
+  const { register, isPending } = useRegister();
 
-  const form = useForm<z.infer<typeof registerSchema>>({
+  const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: registerDefaultValues,
   });
 
-  async function onSubmit(data: z.infer<typeof registerSchema>) {
-    await register(data);
+  function onSubmit(data: RegisterFormValues) {
+    form.clearErrors();
+    register(data, {
+      onError: (err) => handleValidationErrors<RegisterFormValues>(form, err),
+    });
   }
 
   return (
@@ -255,7 +260,7 @@ export function RegisterForm({ className }: { className?: string }) {
 
       <SubmitBtn
         title="Register"
-        isPending={false}
+        isPending={isPending}
         pendingTitle="Registering you Account..."
       />
     </form>

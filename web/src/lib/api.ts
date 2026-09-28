@@ -44,7 +44,11 @@ api.interceptors.response.use(
   (res) => res,
   async (err) => {
     const originalRequest = err.config;
-    if (err.response.status === 401 && !originalRequest._retry) {
+    if (
+      err.response?.status === 401 &&
+      originalRequest?.url !== "/auth/login" &&
+      !originalRequest?._retry
+    ) {
       originalRequest._retry = true;
       try {
         const response = await apiRefresh.post("/");
@@ -76,7 +80,9 @@ export function handleValidationErrors<T extends FieldValues>(
   err: unknown,
 ) {
   if (!isAxiosError(err)) return;
-  const errors = Object.entries(err.response?.data.errors);
+  const errors = Object.entries(
+    err.response?.data.errors || err.response?.data.data.errors,
+  );
   errors?.map((errArr) => {
     form.setError(errArr[0] as any, {
       type: "server",

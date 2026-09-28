@@ -1,9 +1,10 @@
 import type {
   LoginFormValues,
+  RegisterFormValues,
   LoginSuccessResponse,
+  RegisterSuccessResponse,
 } from "@/features/auth/types";
 import { api } from "@/lib/api";
-import type { RegisterUserDto } from "@/features/auth/validations";
 
 export async function loginApi(
   credentials: LoginFormValues,
@@ -12,8 +13,11 @@ export async function loginApi(
   return res.data;
 }
 
-export async function registerApi(data: RegisterUserDto) {
-  console.log("Login Data: ", data);
+export async function registerApi(
+  data: RegisterFormValues,
+): Promise<RegisterSuccessResponse> {
+  const res = await api.post<RegisterSuccessResponse>("/auth/register", data);
+  return res.data;
 }
 
 export async function logoutApi() {
@@ -30,4 +34,8 @@ export async function forgetPasswordApi() {
 
 export async function resetPasswordApi() {
   console.log("RESET USER PASSWORD API");
+}
+
+export async function activateUserAccount() {
+  console.log("ACTIVATE USER ACCOUNT API");
 }

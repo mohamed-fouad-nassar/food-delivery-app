@@ -170,9 +170,9 @@ export const apiRefresh = axios.create({
 });
 ```
 
-The request interceptor reads the cached access token and adds an Authorization header. The response interceptor tries the refresh endpoint for a 401, updates the cached token, then retries the original request. If refreshing fails, it clears the user cache. `QUERY_KEYS` and `queryClient` are imported from `web/src/lib/react-query.ts`.
+The request interceptor reads the cached access token and adds an Authorization header. The response interceptor refreshes and retries eligible requests that receive a 401. A 401 from `POST /auth/login` is deliberately excluded: invalid credentials are an expected login failure, not an expired access token, so refreshing would make a needless request and could mask the login error. The login 401 is rejected unchanged and reaches `useLogin`'s error handler. If refreshing another request fails, the interceptor clears the user cache. `QUERY_KEYS` and `queryClient` are imported from `web/src/lib/react-query.ts`.
 
-There is one robustness issue in the current interceptor: it reads `err.response.status` without checking whether an HTTP response exists. Offline/network failures can have no `response`. Guard it (`err.response?.status`) and verify the config exists before reading or setting `_retry`.
+The response and request config are checked before their properties are read, so an offline/network error (which has no HTTP response) is rejected without entering the refresh flow. The `_retry` flag prevents retry loops when the retried request also returns 401.
 
 ## 8. Centralize Error Helpers
 
@@ -289,7 +289,7 @@ The mutation hook's `onError` is responsible for the toast. The per-call `onErro
 8. If validation passes, `api/src/modules/auth/auth.controller.ts` calls `AuthService.login` in `api/src/modules/auth/auth.service.ts`.
 9. The controller sets the refresh token cookie and returns `{ status, message, data: { user, token } }`.
 10. The mutation's `onSuccess` stores the returned `data` in `QUERY_KEYS.user` and shows a success toast.
-11. Later requests use the cached access token. When a request receives a 401, the response interceptor attempts refresh and retries the original request once.
+11. Later requests use the cached access token. On a 401, the response interceptor attempts refresh and retries once, except for `POST /auth/login`; its 401 passes directly to the login error handler.
 
 ## Verification
 
@@ -304,7 +304,7 @@ Test these behaviors manually:
 
 - Empty or invalid email and a password shorter than eight characters show client-side errors without a network request.
 - A backend 400 shows the matching email/password messages inline and does not throw while parsing the response.
-- Invalid credentials show the API message, without attempting to treat a non-validation response as `data.errors`.
+- Invalid credentials show the API message and do not call the refresh endpoint.
 - An offline request produces a fallback message and does not crash in the Axios interceptor.
 - Successful login stores `{ user, token }` under `QUERY_KEYS.user`; the refresh token remains in the HttpOnly cookie.
 - A failed refresh clears the cached auth payload.
