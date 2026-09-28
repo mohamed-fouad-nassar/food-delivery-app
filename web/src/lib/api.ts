@@ -72,7 +72,7 @@ api.interceptors.response.use(
 export function getAxiosErrorMsg(err: unknown) {
   return axios.isAxiosError<ApiErrorResponse>(err)
     ? err.response?.data?.message
-    : undefined;
+    : "Something went wrong";
 }
 
 export function handleValidationErrors<T extends FieldValues>(

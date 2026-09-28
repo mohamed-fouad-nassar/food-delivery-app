@@ -19,3 +19,7 @@ export type LoginSuccessResponse = ApiResponse<LoginUser>;
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 export type RegisterUser = {};
 export type RegisterSuccessResponse = ApiResponse<RegisterUser>;
+
+// Activate User
+export type ActivateUser = {};
+export type ActiveUserSuccessResponse = ApiResponse<ActivateUser>;

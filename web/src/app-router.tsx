@@ -6,6 +6,7 @@ import MainLayout from "./layouts/main-layout";
 
 const Login = lazy(() => import("./pages/auth/login"));
 const Register = lazy(() => import("./pages/auth/register"));
+const ActivateUser = lazy(() => import("@/pages/auth/activate-user"));
 const ResetPassword = lazy(() => import("./pages/auth/reset-password"));
 const ForgetPassword = lazy(() => import("./pages/auth/forget-password"));
 
@@ -52,6 +53,14 @@ export default function AppRouter() {
           element={
             <Suspense fallback={<ForgetPasswordSkeleton />}>
               <ForgetPassword />
+            </Suspense>
+          }
+        />
+        <Route
+          path="user-activation"
+          element={
+            <Suspense fallback={<ForgetPasswordSkeleton />}>
+              <ActivateUser />
             </Suspense>
           }
         />

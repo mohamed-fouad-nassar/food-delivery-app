@@ -3,6 +3,7 @@ import type {
   RegisterFormValues,
   LoginSuccessResponse,
   RegisterSuccessResponse,
+  ActiveUserSuccessResponse,
 } from "@/features/auth/types";
 import { api } from "@/lib/api";
 
@@ -36,6 +37,9 @@ export async function resetPasswordApi() {
   console.log("RESET USER PASSWORD API");
 }
 
-export async function activateUserAccount() {
-  console.log("ACTIVATE USER ACCOUNT API");
+export async function activateUserApi(token: string) {
+  const res = await api.get<ActiveUserSuccessResponse>(
+    `/auth/verify?token=${token}`,
+  );
+  return res.data;
 }
