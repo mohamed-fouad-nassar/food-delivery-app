@@ -6,7 +6,7 @@ import type {
 
 export async function loginApi(data: LoginUserDto) {
   const res = await api.post("/auth/login", data);
-  return res;
+  return res.data;
 }
 
 export async function registerApi(data: RegisterUserDto) {

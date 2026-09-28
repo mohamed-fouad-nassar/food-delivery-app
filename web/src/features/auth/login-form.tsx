@@ -2,6 +2,7 @@ import z from "zod";
 import { cn } from "cn";
 import { useState } from "react";
 import { Link } from "react-router";
+import { isAxiosError } from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { EyeIcon, EyeOffIcon, Lock, MailIcon } from "lucide-react";
@@ -32,7 +33,18 @@ export function LoginForm({ className }: { className?: string }) {
   });
 
   async function onSubmit(data: z.infer<typeof loginSchema>) {
-    login(data);
+    login(data, {
+      onError: (err) => {
+        if (!isAxiosError(err)) return;
+        const errors = Object.entries(err.response?.data.data.errors);
+        errors.map((errArr) => {
+          form.setError(errArr[0] as any, {
+            type: "server",
+            message: errArr[1] as any,
+          });
+        });
+      },
+    });
   }
 
   return (

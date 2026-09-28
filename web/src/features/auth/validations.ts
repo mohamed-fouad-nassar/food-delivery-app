@@ -74,8 +74,8 @@ export const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters."),
 });
 export const loginDefaultValues = {
-  email: "cust1@gmail.com",
-  password: "qwer1234",
+  email: "",
+  password: "",
 };
 export interface LoginUserDto {
   email: string;
