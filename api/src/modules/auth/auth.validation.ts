@@ -5,7 +5,15 @@ export const registerRules: ValidationChain[] = [
   body("email").isEmail().withMessage("Invalid email format").normalizeEmail(),
   body("password")
     .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters"),
+    .withMessage("Password must be at least 8 characters")
+    .matches(/[A-Z]/)
+    .withMessage("Password must contain at least one uppercase letter")
+    .matches(/[a-z]/)
+    .withMessage("Password must contain at least one lowercase letter")
+    .matches(/[0-9]/)
+    .withMessage("Password must contain at least one number")
+    .matches(/[^A-Za-z0-9]/)
+    .withMessage("Password must contain at least one special character"),
   body("phoneNumber")
     .trim()
     .notEmpty()
@@ -53,7 +61,15 @@ export const resetPasswordRules: ValidationChain[] = [
   query("token").notEmpty().withMessage("Token must be provided"),
   body("password")
     .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters"),
+    .withMessage("Password must be at least 8 characters")
+    .matches(/[A-Z]/)
+    .withMessage("Password must contain at least one uppercase letter")
+    .matches(/[a-z]/)
+    .withMessage("Password must contain at least one lowercase letter")
+    .matches(/[0-9]/)
+    .withMessage("Password must contain at least one number")
+    .matches(/[^A-Za-z0-9]/)
+    .withMessage("Password must contain at least one special character"),
   body("confirmPassword").custom((value, { req }) => {
     if (value !== req.body.password) throw new Error("Passwords do not match");
     return true;

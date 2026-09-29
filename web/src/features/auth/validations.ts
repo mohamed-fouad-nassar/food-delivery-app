@@ -21,12 +21,12 @@ export const registerSchema = z
     firstName: z
       .string("First name is required")
       .min(3, "First name must be at least 3 characters")
-      .max(25, "First name cannot exceed 25 characters")
+      .max(50, "First name cannot exceed 50 characters")
       .trim(),
     lastName: z
       .string("First name is required")
       .min(3, "First name must be at least 3 characters")
-      .max(25, "First name cannot exceed 25 characters")
+      .max(50, "First name cannot exceed 50 characters")
       .trim()
       .optional(),
     email: z
