@@ -80,13 +80,14 @@ export function handleValidationErrors<T extends FieldValues>(
   err: unknown,
 ) {
   if (!isAxiosError(err)) return;
-  const errors = Object.entries(
-    err.response?.data.errors || err.response?.data.data.errors,
-  );
-  errors?.map((errArr) => {
-    form.setError(errArr[0] as any, {
-      type: "server",
-      message: errArr[1] as any,
+  const errObj = err.response?.data?.errors || err.response?.data?.data?.errors;
+  if (errObj) {
+    const errors = Object.entries(errObj);
+    errors?.map((errArr) => {
+      form.setError(errArr[0] as any, {
+        type: "server",
+        message: errArr[1] as any,
+      });
     });
-  });
+  } else return;
 }

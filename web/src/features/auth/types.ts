@@ -1,7 +1,11 @@
 import type z from "zod";
 
+import type {
+  loginSchema,
+  registerSchema,
+  forgetPasswordSchema,
+} from "@/features/auth/validations";
 import type { ApiResponse } from "@/lib/api";
-import type { loginSchema, registerSchema } from "@/features/auth/validations";
 
 // Login
 export type LoginFormValues = z.infer<typeof loginSchema>;
@@ -23,3 +27,8 @@ export type RegisterSuccessResponse = ApiResponse<RegisterUser>;
 // Activate User
 export type ActivateUser = {};
 export type ActiveUserSuccessResponse = ApiResponse<ActivateUser>;
+
+// Forget Password
+export type ForgetPasswordFormValues = z.infer<typeof forgetPasswordSchema>;
+export type ForgetPasswordUser = {};
+export type ForgetPasswordSuccessResponse = ApiResponse<ForgetPasswordUser>;

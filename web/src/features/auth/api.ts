@@ -4,6 +4,8 @@ import type {
   LoginSuccessResponse,
   RegisterSuccessResponse,
   ActiveUserSuccessResponse,
+  ForgetPasswordFormValues,
+  ForgetPasswordSuccessResponse,
 } from "@/features/auth/types";
 import { api } from "@/lib/api";
 
@@ -29,8 +31,14 @@ export async function refreshApi() {
   console.log("REFRESH USER TOKEN");
 }
 
-export async function forgetPasswordApi() {
-  console.log("FORGET USER PASSWORD API");
+export async function forgetPasswordApi(
+  data: ForgetPasswordFormValues,
+): Promise<ForgetPasswordSuccessResponse> {
+  const res = await api.post<ForgetPasswordSuccessResponse>(
+    "/auth/forget-password",
+    data,
+  );
+  return res.data;
 }
 
 export async function resetPasswordApi() {

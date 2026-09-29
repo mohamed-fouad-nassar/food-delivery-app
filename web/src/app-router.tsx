@@ -4,18 +4,17 @@ import { Routes, Route, Navigate } from "react-router";
 import AuthLayout from "./layouts/auth-layout";
 import MainLayout from "./layouts/main-layout";
 
+import NotFound from "./pages/not-found";
+const Landing = lazy(() => import("./pages/landing"));
 const Login = lazy(() => import("./pages/auth/login"));
 const Register = lazy(() => import("./pages/auth/register"));
 const ActivateUser = lazy(() => import("@/pages/auth/activate-user"));
 const ResetPassword = lazy(() => import("./pages/auth/reset-password"));
 const ForgetPassword = lazy(() => import("./pages/auth/forget-password"));
 
-const Landing = lazy(() => import("./pages/landing"));
-
-import NotFound from "./pages/not-found";
-
 import LoginSkeleton from "./skeletons/pages/login.skeleton";
 import RegisterSkeleton from "./skeletons/pages/register.skeleton";
+import ActivateUserSkeleton from "@/skeletons/pages/activate-user-skeleton";
 import ResetPasswordSkeleton from "./skeletons/pages/reset-password.skeleton";
 import ForgetPasswordSkeleton from "./skeletons/pages/forget-password.skeleton";
 
@@ -59,7 +58,7 @@ export default function AppRouter() {
         <Route
           path="user-activation"
           element={
-            <Suspense fallback={<ForgetPasswordSkeleton />}>
+            <Suspense fallback={<ActivateUserSkeleton />}>
               <ActivateUser />
             </Suspense>
           }

@@ -1,6 +1,9 @@
 import z from "zod";
 
-import type { LoginFormValues } from "@/features/auth/types";
+import type {
+  ForgetPasswordFormValues,
+  LoginFormValues,
+} from "@/features/auth/types";
 
 export const userRoles = [
   { label: "Customer", value: "CUSTOMER" },
@@ -11,6 +14,7 @@ const userRolesValues = userRoles.map((u) => u.value);
 const userEnum = z.enum(userRolesValues);
 export type UserRole = z.infer<typeof userEnum>;
 
+// Register
 export const registerSchema = z
   .object({
     firstName: z
@@ -63,6 +67,7 @@ export const registerDefaultValues = {
   role: userRoles.at(0)?.value,
 };
 
+// Login
 export const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters."),
@@ -70,4 +75,12 @@ export const loginSchema = z.object({
 export const loginDefaultValues: LoginFormValues = {
   email: "",
   password: "",
+};
+
+// Forget Password
+export const forgetPasswordSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+});
+export const forgetPasswordDefaultValues: ForgetPasswordFormValues = {
+  email: "",
 };
