@@ -16,11 +16,11 @@ const cookieOptions: CookieOptions = {
 export const register = catchAsync(
   async (req: Request, res: Response, _: NextFunction) => {
     const data: RegisterUserDto = req.body;
-    const user = await AuthService.register(data);
+    const resData = await AuthService.register(data);
     res.json({
       status: httpStatus.SUCCESS,
       message: "Email Registered Successfully. Check you email for activation",
-      data: user,
+      data: resData,
     });
   },
 );

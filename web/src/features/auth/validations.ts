@@ -14,6 +14,8 @@ export const userRoles = [
 const userRolesValues = userRoles.map((u) => u.value);
 const userEnum = z.enum(userRolesValues);
 export type UserRole = z.infer<typeof userEnum>;
+export const userStatuses = ["PENDING", "ACTIVE", "SUSPENDED"] as const;
+export type UserStatus = (typeof userStatuses)[number];
 
 // Register
 export const registerSchema = z

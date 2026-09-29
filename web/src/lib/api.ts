@@ -1,4 +1,3 @@
-import { redirect } from "react-router";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import axios, { isAxiosError, type InternalAxiosRequestConfig } from "axios";
 
@@ -32,14 +31,14 @@ export const apiRefresh = axios.create({
 
 api.interceptors.request.use(
   (req: InternalAxiosRequestConfig) => {
-    const userData = queryClient.getQueryData<{ token: string }>(["user"]);
+    const userData = queryClient.getQueryData<{ token: string }>(
+      QUERY_KEYS.user,
+    );
     if (userData?.token)
       req.headers["Authorization"] = `Bearer ${userData?.token}`;
     return req;
   },
-  (err) => {
-    return Promise.reject(err);
-  },
+  (err) => Promise.reject(err),
 );
 
 api.interceptors.response.use(
@@ -53,7 +52,9 @@ api.interceptors.response.use(
     ) {
       originalRequest._retry = true;
       try {
-        const response = await apiRefresh.post("/");
+        const response = await apiRefresh.post<{ data: { token: string } }>(
+          "/",
+        );
         const { token } = response.data.data;
         queryClient.setQueryData(QUERY_KEYS.user, (oldData: any) => ({
           ...oldData,
@@ -62,8 +63,9 @@ api.interceptors.response.use(
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         return api(originalRequest);
       } catch (refreshErr) {
-        queryClient.setQueryData(QUERY_KEYS.user, null);
-        redirect("/auth/login");
+        clearAuthSession();
+        // @TODO: Redirect the user to login page
+        window.location.replace("/auth/login");
         return Promise.reject(refreshErr);
       }
     }
@@ -93,4 +95,10 @@ export function handleValidationErrors<T extends FieldValues>(
       });
     });
   } else return;
+}
+
+export function clearAuthSession() {
+  queryClient.removeQueries({ queryKey: QUERY_KEYS.user });
+  delete api.defaults.headers.common["Authorization"];
+  delete apiRefresh.defaults.headers.common["Authorization"];
 }
