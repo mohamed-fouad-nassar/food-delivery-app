@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
+import { useEffect, useRef, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
 import { useActivateUser } from "@/features/auth/useActivateUser";

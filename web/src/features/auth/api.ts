@@ -6,6 +6,8 @@ import type {
   ActiveUserSuccessResponse,
   ForgetPasswordFormValues,
   ForgetPasswordSuccessResponse,
+  ResetPasswordSuccessResponse,
+  ResetPasswordFormValues,
 } from "@/features/auth/types";
 import { api } from "@/lib/api";
 
@@ -41,8 +43,15 @@ export async function forgetPasswordApi(
   return res.data;
 }
 
-export async function resetPasswordApi() {
-  console.log("RESET USER PASSWORD API");
+export async function resetPasswordApi(
+  data: ResetPasswordFormValues,
+  token: string,
+) {
+  const res = await api.post<ResetPasswordSuccessResponse>(
+    `/auth/reset-password?token=${token}`,
+    data,
+  );
+  return res.data;
 }
 
 export async function activateUserApi(token: string) {

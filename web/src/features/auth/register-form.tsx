@@ -261,7 +261,7 @@ export function RegisterForm({ className }: { className?: string }) {
       <SubmitBtn
         title="Register"
         isPending={isPending}
-        pendingTitle="Registering you Account..."
+        pendingTitle="Registering your Account..."
       />
     </form>
   );
