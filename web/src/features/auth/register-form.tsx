@@ -90,7 +90,7 @@ export function RegisterForm({ className }: { className?: string }) {
         <Field>
           <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
           <InputGroup>
-            <InputGroupInput name="lastName" id="lastName" placeholder="Doe" />
+            <InputGroupInput {...form.register("lastName")} placeholder="Doe" />
             <InputGroupAddon align="inline-start">
               <UserIcon />
             </InputGroupAddon>

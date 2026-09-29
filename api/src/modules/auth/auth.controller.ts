@@ -50,11 +50,11 @@ export const logout = catchAsync(
 export const requestResetPasswordToken = catchAsync(
   async (req: Request, res: Response, _: NextFunction) => {
     const { email } = req.body;
-    await AuthService.requestResetPasswordToken(email);
+    const data = await AuthService.requestResetPasswordToken(email);
     res.json({
       status: httpStatus.SUCCESS,
       message: "Reset Password Email Sent Successfully",
-      data: null,
+      data,
     });
   },
 );
@@ -75,9 +75,10 @@ export const resetPassword = catchAsync(
 export const refreshToken = catchAsync(
   async (req: Request, res: Response, _: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
-    const token = await AuthService.refreshToken(refreshToken);
+    const { token, refreshToken: newRefreshToken } =
+      await AuthService.refreshToken(refreshToken);
 
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true, // Prevents client-side scripts from reading the token (Mitigates XSS)
       secure: appConfig.node_env === "production", // Requires HTTPS in production
       sameSite: "strict", // Protects against Cross-Site Request Forgery (CSRF)

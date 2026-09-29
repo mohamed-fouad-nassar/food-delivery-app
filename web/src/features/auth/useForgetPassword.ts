@@ -8,7 +8,18 @@ export function useForgetPassword() {
   const { mutate: forgetPassword, isPending } = useMutation({
     mutationFn: forgetPasswordApi,
     onSuccess: (res) => {
-      toast.add({ type: "success", description: res.message });
+      toast.add({
+        type: "success",
+        description: res.message,
+
+        // this for development only to show mock emails
+        actionProps: {
+          children: "View Email",
+          onClick: () => {
+            window.location.replace(res.data);
+          },
+        },
+      });
     },
     onError: (err: unknown) => {
       const message = getAxiosErrorMsg(err);

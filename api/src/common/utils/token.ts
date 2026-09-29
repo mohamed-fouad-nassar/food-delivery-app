@@ -6,6 +6,18 @@ import { httpStatus } from "../types/http-status";
 import type { UserRole } from "../types/user-role";
 import { tokenTypes, type TokenTypes } from "../types/token";
 
+const verify = (token: string, secret: string, expected: TokenTypes) => {
+  try {
+    const payload = jwt.verify(token, secret) as JwtRefreshPayload;
+    if (payload.type !== expected)
+      throw new HttpError(401, httpStatus.FAIL, "Invalid token type");
+    return payload;
+  } catch (err) {
+    if (err instanceof HttpError) throw err;
+    throw new HttpError(401, httpStatus.FAIL, "Token expired or invalid");
+  }
+};
+
 interface JwtRefreshPayload {
   id: string;
   type: TokenTypes;
@@ -24,7 +36,11 @@ export const generateAccessToken = (id: string, role: UserRole): string =>
     expiresIn: authConfig.access_secret_expires_in as any,
   });
 export const verifyToken = (token: string): JwtPayload => {
-  const payload = jwt.verify(token, authConfig.access_secret) as JwtPayload;
+  const payload = verify(
+    token,
+    authConfig.access_secret,
+    tokenTypes.ACCESS,
+  ) as JwtPayload;
   if (payload.type !== tokenTypes.ACCESS)
     throw new HttpError(400, httpStatus.FAIL, "Invalid Token Type");
   return payload;
@@ -36,13 +52,11 @@ export const generateRefreshToken = (id: string): string =>
     expiresIn: authConfig.refresh_secret_expires_in as any,
   });
 export const verifyRefreshToken = (token: string): JwtRefreshPayload => {
-  const payload = jwt.verify(
+  return verify(
     token,
     authConfig.refresh_secret,
+    tokenTypes.REFRESH,
   ) as JwtRefreshPayload;
-  if (payload.type !== tokenTypes.REFRESH)
-    throw new HttpError(400, httpStatus.FAIL, "Invalid Token Type");
-  return payload;
 };
 
 // Validation Token
@@ -57,13 +71,11 @@ export const generateVerificationToken = (id: string, email: string): string =>
 export const verifyVerificationToken = (
   token: string,
 ): JwtVerificationPayload => {
-  const payload = jwt.verify(
+  return verify(
     token,
     authConfig.email_verification_secret,
+    tokenTypes.EMAIL_VERIFICATION,
   ) as JwtVerificationPayload;
-  if (payload.type !== tokenTypes.EMAIL_VERIFICATION)
-    throw new HttpError(400, httpStatus.FAIL, "Invalid Token Type");
-  return payload;
 };
 
 // Reset Password Token
@@ -78,13 +90,11 @@ export const generateResetPasswordToken = (id: string, email: string): string =>
 export const verifyResetPasswordToken = (
   token: string,
 ): JwtResetPasswordPayload => {
-  const payload = jwt.verify(
+  return verify(
     token,
     authConfig.reset_password_secret,
+    tokenTypes.PASSWORD_RESET,
   ) as JwtResetPasswordPayload;
-  if (payload.type !== tokenTypes.PASSWORD_RESET)
-    throw new HttpError(400, httpStatus.FAIL, "Invalid Token Type");
-  return payload;
 };
 
 // Hash Tokens

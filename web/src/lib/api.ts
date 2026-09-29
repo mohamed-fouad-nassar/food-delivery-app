@@ -1,6 +1,8 @@
+import { redirect } from "react-router";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import axios, { isAxiosError, type InternalAxiosRequestConfig } from "axios";
 
+import APP_CONFIG from "@/lib/env";
 import { QUERY_KEYS, queryClient } from "@/lib/react-query";
 
 export type ApiResponse<T> = {
@@ -16,7 +18,7 @@ export type ValidationErrorResponse<T> = ApiResponse<{
 export type ApiErrorResponse = ApiResponse<unknown>;
 
 export const api = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: `${APP_CONFIG.apiBaseUrl}`,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -24,7 +26,7 @@ export const api = axios.create({
 });
 
 export const apiRefresh = axios.create({
-  baseURL: "http://localhost:3000/api/auth/refresh",
+  baseURL: `${APP_CONFIG.apiBaseUrl}/auth/refresh`,
   withCredentials: true,
 });
 
@@ -61,6 +63,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshErr) {
         queryClient.setQueryData(QUERY_KEYS.user, null);
+        redirect("/auth/login");
         return Promise.reject(refreshErr);
       }
     }

@@ -1,8 +1,9 @@
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useEffect, useRef, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
 import { useActivateUser } from "@/features/auth/useActivateUser";
+import { Button } from "@/components/ui/button";
 
 export default function ActivateUser() {
   const [searchParams] = useSearchParams();
@@ -29,7 +30,10 @@ export default function ActivateUser() {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
         <h2 className="font-medium text-2xl text-destructive">{errorText}</h2>
-        <p>Try to login again later</p>
+        <Button
+          variant="link"
+          render={<Link to="/auth/login">Try to login again later</Link>}
+        />
       </div>
     );
   }

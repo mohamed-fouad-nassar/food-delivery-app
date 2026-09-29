@@ -57,13 +57,13 @@ export class AuthService {
       user.id,
       user.email,
     );
-    await sendVerificationEmail(
+    const emailPreviewUrl = await sendVerificationEmail(
       user.firstName,
       user.email,
       emailVerificationToken,
     );
 
-    return user;
+    return { user, emailPreviewUrl };
   }
 
   static async login(data: LoginUserDto) {
@@ -97,6 +97,7 @@ export class AuthService {
     await prisma.user.update({
       where: { id: user.id },
       data: {
+        lastLoginAt: new Date(),
         refreshTokenHash: hashToken(refreshToken),
         refreshTokenExpiresAt: calcExpiryFromMs(refreshExpiryAtInMS),
       },
@@ -158,11 +159,13 @@ export class AuthService {
       },
     });
 
-    await sendResetPasswordToken(
+    const emailPreviewUrl = sendResetPasswordToken(
       user.firstName,
       user.email,
       resetPasswordToken,
     );
+
+    return emailPreviewUrl;
   }
 
   static async resetPassword(password: string, resetPasswordToken: string) {

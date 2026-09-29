@@ -8,7 +8,20 @@ export function useRegister() {
   const { mutate: register, isPending } = useMutation({
     mutationFn: registerApi,
     onSuccess: (res) => {
-      toast.add({ type: "success", description: res.message });
+      console.log(res);
+
+      toast.add({
+        type: "success",
+        description: res.message,
+
+        // this for development only to show mock emails
+        actionProps: {
+          children: "View Email",
+          onClick: () => {
+            window.location.replace(res.data.emailPreviewUrl);
+          },
+        },
+      });
     },
     onError: (err: unknown) => {
       const message = getAxiosErrorMsg(err);
