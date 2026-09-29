@@ -10,7 +10,7 @@ export default function ResetPassword() {
   const token = searchParams.get("token");
 
   useEffect(() => {
-    if (!token) navigate("/auth/forget-password");
+    if (!token) navigate("/auth/forget-password", { replace: true });
   }, [token]);
 
   return (

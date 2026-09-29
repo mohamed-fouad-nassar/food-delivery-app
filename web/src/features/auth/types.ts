@@ -48,3 +48,6 @@ export type ForgetPasswordSuccessResponse = ApiResponse<ForgetPasswordUser>;
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 export type ResetPasswordUser = {};
 export type ResetPasswordSuccessResponse = ApiResponse<ResetPasswordUser>;
+
+// Logout
+export type LogoutSuccessResponse = ApiResponse<null>;

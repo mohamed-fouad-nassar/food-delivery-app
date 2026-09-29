@@ -19,7 +19,7 @@ export function useResetPassword() {
     }) => resetPasswordApi(data, token),
     onSuccess: (res) => {
       toast.add({ type: "success", description: res.message });
-      navigate("/auth/login");
+      navigate("/auth/login", { replace: true });
     },
     onError: (err: unknown) => {
       const message = getAxiosErrorMsg(err);

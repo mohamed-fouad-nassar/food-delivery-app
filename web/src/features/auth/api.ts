@@ -2,12 +2,13 @@ import type {
   LoginFormValues,
   RegisterFormValues,
   LoginSuccessResponse,
+  LogoutSuccessResponse,
   RegisterSuccessResponse,
-  ActiveUserSuccessResponse,
-  ForgetPasswordFormValues,
-  ForgetPasswordSuccessResponse,
-  ResetPasswordSuccessResponse,
   ResetPasswordFormValues,
+  ForgetPasswordFormValues,
+  ActiveUserSuccessResponse,
+  ResetPasswordSuccessResponse,
+  ForgetPasswordSuccessResponse,
 } from "@/features/auth/types";
 import { api } from "@/lib/api";
 
@@ -25,12 +26,9 @@ export async function registerApi(
   return res.data;
 }
 
-export async function logoutApi() {
-  console.log("LOGOUT USER");
-}
-
-export async function refreshApi() {
-  console.log("REFRESH USER TOKEN");
+export async function logoutApi(): Promise<LogoutSuccessResponse> {
+  const res = await api.post<LogoutSuccessResponse>("/auth/logout");
+  return res.data;
 }
 
 export async function forgetPasswordApi(
