@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "oxc.oxc-vscode",
+    "prisma.prisma",
+    "tailwindlabs.tailwindcss-intellisense",
+    "TypeScriptTeam.native-preview"
+  ]
+}

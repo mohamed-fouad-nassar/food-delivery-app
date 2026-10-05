@@ -15,6 +15,7 @@ import {
   sendResetPasswordToken,
 } from "../../common/utils/email";
 import { prisma } from "../../db";
+import { publicUserSelect } from "./auth.types";
 import { HttpError } from "../../common/utils/http";
 import { UserStatus } from "../../generated/prisma/enums";
 import { httpStatus } from "../../common/types/http-status";
@@ -28,12 +29,12 @@ export class AuthService {
 
     const isUserExists = await prisma.user.findFirst({
       where: { OR: [{ email }, { phoneNumber }] },
-      omit: { password: true },
+      select: { id: true },
     });
 
     if (isUserExists)
       throw new HttpError(
-        400,
+        409,
         httpStatus.FAIL,
         "User Already Exists with email or phone number",
       );
@@ -50,38 +51,43 @@ export class AuthService {
         phoneNumber,
         password: hashedPassword,
       },
-      omit: { password: true },
+      select: publicUserSelect,
     });
 
     const emailVerificationToken = generateVerificationToken(
       user.id,
       user.email,
     );
-    await sendVerificationEmail(
+    const emailPreviewUrl = await sendVerificationEmail(
       user.firstName,
       user.email,
       emailVerificationToken,
     );
 
-    return user;
+    return { user, emailPreviewUrl };
   }
 
   static async login(data: LoginUserDto) {
     const { email, password } = data;
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !(await bcrypt.compare(password, user?.password)))
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { ...publicUserSelect, password: true },
+    });
+    if (!user) throw new HttpError(401, httpStatus.FAIL, "Invalid credentials");
+
+    if (!(await bcrypt.compare(password, user?.password)))
       throw new HttpError(401, httpStatus.FAIL, "Invalid credentials");
 
     if (user.status === UserStatus.PENDING)
       throw new HttpError(
-        401,
+        403,
         httpStatus.FAIL,
         "Email not active. Please verify your email",
       );
 
     if (user.status === UserStatus.SUSPENDED)
       throw new HttpError(
-        401,
+        403,
         httpStatus.FAIL,
         "Yor email is suspended right now. Contact technical support team",
       );
@@ -92,26 +98,27 @@ export class AuthService {
     await prisma.user.update({
       where: { id: user.id },
       data: {
+        lastLoginAt: new Date(),
         refreshTokenHash: hashToken(refreshToken),
         refreshTokenExpiresAt: calcExpiryFromMs(refreshExpiryAtInMS),
       },
+      select: publicUserSelect,
     });
-    const { password: _, ...userData } = user;
 
-    return { user: userData, token, refreshToken };
+    return { user, token, refreshToken };
   }
 
   static async logout(refreshToken: string) {
     if (!refreshToken)
-      throw new HttpError(400, httpStatus.FAIL, "No Logged in user");
+      throw new HttpError(401, httpStatus.FAIL, "No Logged in user");
 
     const { id } = verifyRefreshToken(refreshToken);
     const user = await prisma.user.findUnique({
       where: { id },
-      omit: { password: true },
+      select: { id: true, refreshTokenHash: true },
     });
     if (!user || hashToken(refreshToken) !== user.refreshTokenHash)
-      throw new HttpError(403, httpStatus.FAIL, "Invalid token provided");
+      throw new HttpError(401, httpStatus.FAIL, "Invalid token provided");
 
     await prisma.user.update({
       where: { id: user.id },
@@ -125,25 +132,20 @@ export class AuthService {
   static async requestResetPasswordToken(email: string) {
     const user = await prisma.user.findFirst({
       where: { email },
-      omit: { password: true },
+      select: publicUserSelect,
     });
-    if (!user)
-      throw new HttpError(
-        400,
-        httpStatus.FAIL,
-        "No user found with this email",
-      );
+    if (!user) throw new HttpError(404, httpStatus.FAIL, "User Not Found");
 
     if (user.status === UserStatus.PENDING)
       throw new HttpError(
-        401,
+        403,
         httpStatus.FAIL,
         "Email not active. Please verify your email",
       );
 
     if (user.status === UserStatus.SUSPENDED)
       throw new HttpError(
-        401,
+        403,
         httpStatus.FAIL,
         "Yor email is suspended right now. Contact technical support team",
       );
@@ -158,17 +160,19 @@ export class AuthService {
       },
     });
 
-    await sendResetPasswordToken(
+    const emailPreviewUrl = sendResetPasswordToken(
       user.firstName,
       user.email,
       resetPasswordToken,
     );
+
+    return emailPreviewUrl;
   }
 
   static async resetPassword(password: string, resetPasswordToken: string) {
     if (!resetPasswordToken)
       throw new HttpError(
-        404,
+        400,
         httpStatus.FAIL,
         "Reset password token is required",
       );
@@ -178,7 +182,7 @@ export class AuthService {
       where: { id },
       omit: { password: true },
     });
-    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not founded!");
+    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not found");
     if (hashToken(resetPasswordToken) !== user.passwordResetTokenHash)
       throw new HttpError(
         400,
@@ -186,16 +190,16 @@ export class AuthService {
         "Reset password token miss match",
       );
     if (user.status !== UserStatus.ACTIVE)
-      throw new HttpError(400, httpStatus.FAIL, "User account must be active");
+      throw new HttpError(403, httpStatus.FAIL, "User account must be active");
 
     const expiresAt = user.passwordResetTokenExpiresAt;
     if (!expiresAt || expiresAt <= new Date())
-      throw new HttpError(400, httpStatus.FAIL, "Reset password token expired");
+      throw new HttpError(403, httpStatus.FAIL, "Reset password token expired");
 
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    user = await prisma.user.update({
+    await prisma.user.update({
       where: { id: user.id },
       data: {
         password: hashedPassword,
@@ -215,13 +219,13 @@ export class AuthService {
       omit: { password: true },
     });
     if (!user || hashToken(refreshToken) !== user.refreshTokenHash)
-      throw new HttpError(403, httpStatus.FAIL, "Invalid token provided");
+      throw new HttpError(401, httpStatus.FAIL, "Invalid token provided");
     if (user.status !== UserStatus.ACTIVE)
-      throw new HttpError(400, httpStatus.FAIL, "User account must be active");
+      throw new HttpError(403, httpStatus.FAIL, "User account must be active");
 
     const expiresAt = user.refreshTokenExpiresAt;
     if (!expiresAt || expiresAt <= new Date())
-      throw new HttpError(400, httpStatus.FAIL, "Refresh token expired");
+      throw new HttpError(401, httpStatus.FAIL, "Refresh token expired");
 
     const {
       token,
@@ -243,7 +247,7 @@ export class AuthService {
   static async verifyUserEmail(verifyToken: string) {
     if (!verifyToken)
       throw new HttpError(
-        404,
+        400,
         httpStatus.FAIL,
         "Verification token is required",
       );
@@ -253,13 +257,13 @@ export class AuthService {
 
     let user = await prisma.user.findFirst({
       where: { id: userId },
-      omit: { password: true },
+      select: publicUserSelect,
     });
-    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not founded!");
+    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not found");
     if (user.email !== email)
-      throw new HttpError(400, httpStatus.FAIL, "Token mismatch!");
+      throw new HttpError(401, httpStatus.FAIL, "Token mismatch!");
     if (user.status !== UserStatus.PENDING)
-      throw new HttpError(400, httpStatus.FAIL, "User already active");
+      throw new HttpError(403, httpStatus.FAIL, "User already active");
 
     const { token, refreshToken, refreshExpiryAtInMS } =
       this.generateUserTokens(user.id, user.role);
@@ -271,7 +275,7 @@ export class AuthService {
         refreshTokenHash: hashToken(refreshToken),
         refreshTokenExpiresAt: calcExpiryFromMs(refreshExpiryAtInMS),
       },
-      omit: { password: true },
+      select: publicUserSelect,
     });
 
     return { user, token, refreshToken };
@@ -284,10 +288,10 @@ export class AuthService {
     const { id } = verifyToken(accessToken);
     const user = await prisma.user.findUnique({
       where: { id },
-      omit: { password: true },
+      select: publicUserSelect,
     });
     if (!user)
-      throw new HttpError(403, httpStatus.FAIL, "Invalid token provided");
+      throw new HttpError(401, httpStatus.FAIL, "Invalid token provided");
 
     return user;
   }

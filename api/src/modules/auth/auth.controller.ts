@@ -1,4 +1,4 @@
-import type { NextFunction, Request, Response } from "express";
+import type { CookieOptions, NextFunction, Request, Response } from "express";
 
 import { AuthService } from "./auth.service";
 import appConfig from "../../common/config/app.configs";
@@ -6,14 +6,21 @@ import { catchAsync } from "../../common/utils/catch-async";
 import { httpStatus } from "../../common/types/http-status";
 import type { LoginUserDto, RegisterUserDto } from "./auth.types";
 
+const cookieOptions: CookieOptions = {
+  httpOnly: true, // Prevents client-side scripts from reading the token (Mitigates XSS)
+  secure: appConfig.node_env === "production", // Requires HTTPS in production
+  sameSite: "strict", // Protects against Cross-Site Request Forgery (CSRF)
+  maxAge: 7 * 24 * 60 * 60 * 1000, // max age in (ms) => 7 days
+};
+
 export const register = catchAsync(
   async (req: Request, res: Response, _: NextFunction) => {
     const data: RegisterUserDto = req.body;
-    const user = await AuthService.register(data);
+    const resData = await AuthService.register(data);
     res.json({
       status: httpStatus.SUCCESS,
       message: "Email Registered Successfully. Check you email for activation",
-      data: user,
+      data: resData,
     });
   },
 );
@@ -23,12 +30,7 @@ export const login = catchAsync(
     const data: LoginUserDto = req.body;
     const { user, token, refreshToken } = await AuthService.login(data);
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true, // Prevents client-side scripts from reading the token (Mitigates XSS)
-      secure: appConfig.node_env === "production", // Requires HTTPS in production
-      sameSite: "strict", // Protects against Cross-Site Request Forgery (CSRF)
-      maxAge: 7 * 24 * 60 * 60 * 1000, // max age in (ms) => 7 days
-    });
+    res.cookie("refreshToken", refreshToken, cookieOptions);
 
     res.json({
       status: httpStatus.SUCCESS,
@@ -38,12 +40,11 @@ export const login = catchAsync(
   },
 );
 
-// @TODO: Add the refreshToken encrypted or plain in the user table and then remove it on logout.
 export const logout = catchAsync(
   async (req: Request, res: Response, _: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
     await AuthService.logout(refreshToken);
-    res.clearCookie("refreshToken");
+    res.clearCookie("refreshToken", cookieOptions);
     res.json({ status: httpStatus.SUCCESS, message: "Good Bye!", data: null });
   },
 );
@@ -51,11 +52,11 @@ export const logout = catchAsync(
 export const requestResetPasswordToken = catchAsync(
   async (req: Request, res: Response, _: NextFunction) => {
     const { email } = req.body;
-    await AuthService.requestResetPasswordToken(email);
+    const data = await AuthService.requestResetPasswordToken(email);
     res.json({
       status: httpStatus.SUCCESS,
       message: "Reset Password Email Sent Successfully",
-      data: null,
+      data,
     });
   },
 );
@@ -76,14 +77,10 @@ export const resetPassword = catchAsync(
 export const refreshToken = catchAsync(
   async (req: Request, res: Response, _: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
-    const token = await AuthService.refreshToken(refreshToken);
+    const { token, refreshToken: newRefreshToken } =
+      await AuthService.refreshToken(refreshToken);
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true, // Prevents client-side scripts from reading the token (Mitigates XSS)
-      secure: appConfig.node_env === "production", // Requires HTTPS in production
-      sameSite: "strict", // Protects against Cross-Site Request Forgery (CSRF)
-      maxAge: 7 * 24 * 60 * 60 * 1000, // max age in (ms) => 7 days
-    });
+    res.cookie("refreshToken", newRefreshToken, cookieOptions);
 
     res.json({
       status: httpStatus.SUCCESS,
@@ -99,12 +96,7 @@ export const verifyUserEmail = catchAsync(
     const { user, token, refreshToken } =
       await AuthService.verifyUserEmail(verifyToken);
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true, // Prevents client-side scripts from reading the token (Mitigates XSS)
-      secure: appConfig.node_env === "production", // Requires HTTPS in production
-      sameSite: "strict", // Protects against Cross-Site Request Forgery (CSRF)
-      maxAge: 7 * 24 * 60 * 60 * 1000, // max age in (ms) => 7 days
-    });
+    res.cookie("refreshToken", refreshToken, cookieOptions);
 
     res.json({
       status: httpStatus.SUCCESS,

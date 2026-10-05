@@ -23,7 +23,7 @@ export async function sendVerificationEmail(
   email: string,
   token: string,
 ) {
-  const verificationUrl = `${appConfig.app_url}/api/auth/verify?token=${token}`;
+  const verificationUrl = `${appConfig.cors_origin}/auth/user-activation?token=${token}`;
   const transporter = await createMailTransporter();
   const mailOptions = {
     from: '"Security Team" <no-reply@food-delivery.com>',
@@ -43,18 +43,21 @@ export async function sendVerificationEmail(
 
   const info = await transporter.sendMail(mailOptions);
 
-  console.log("-----------------------------------------");
-  console.log("Email Sent Successfully!");
-  console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
-  console.log("Token: ", token);
-  console.log("-----------------------------------------");
+  // console.log("-----------------------------------------");
+  // console.log("Email Sent Successfully!");
+  // console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
+  // console.log("Token: ", token);
+  // console.log("-----------------------------------------");
+
+  return nodemailer.getTestMessageUrl(info);
 }
+
 export async function sendResetPasswordToken(
   name: string,
   email: string,
   token: string,
 ) {
-  const resetPasswordUrl = `${appConfig.app_url}/api/auth/reset-password?token=${token}`;
+  const resetPasswordUrl = `${appConfig.cors_origin}/auth/reset-password?token=${token}`;
   const transporter = await createMailTransporter();
   const mailOptions = {
     from: '"Security Team" <no-reply@food-delivery.com>',
@@ -79,9 +82,11 @@ export async function sendResetPasswordToken(
 
   const info = await transporter.sendMail(mailOptions);
 
-  console.log("-----------------------------------------");
-  console.log("Email Sent Successfully!");
-  console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
-  console.log("Token: ", token);
-  console.log("-----------------------------------------");
+  // console.log("-----------------------------------------");
+  // console.log("Email Sent Successfully!");
+  // console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
+  // console.log("Token: ", token);
+  // console.log("-----------------------------------------");
+
+  return nodemailer.getTestMessageUrl(info);
 }

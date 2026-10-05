@@ -42,13 +42,19 @@ pnpm-debug.log*
 # ====================================================================
 .DS_Store
 Thumbs.db
-.vscode/
 .idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.swp
+
+# Share the team editor config, keep personal editor files out of git
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
 
 # ====================================================================
 # Testing & Coverage

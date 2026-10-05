@@ -4,6 +4,7 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
+    "postinstall": "prisma generate || echo prisma generate skipped: no DATABASE_URL found in .env",
     "dev": "tsx watch src/server.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsup",

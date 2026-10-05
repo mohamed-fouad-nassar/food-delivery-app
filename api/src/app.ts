@@ -9,6 +9,7 @@ import { notFound } from "./common/middlewares/not-found.middleware";
 import { errorHandler } from "./common/middlewares/error-handler.middleware";
 
 import authRoute from "./modules/auth/auth.route";
+import { globalLimiter } from "./common/middlewares/rate-limit.middleware";
 
 const app = express();
 app.use(express.json());
@@ -26,6 +27,7 @@ app.use(
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use("/uploads", express.static("uploads"));
+app.use("/api", globalLimiter);
 
 app.get("/api/health", (_, res) => {
   res.json({ message: "API is running 🚀" });

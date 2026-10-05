@@ -1,0 +1,48 @@
+{
+  "postman.settings.dotenv-detection-notification-visibility": false,
+
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "never",
+    "source.fixAll.oxc": "never"
+  },
+
+  "js/ts.suggest.enabled": true,
+  "js/ts.suggest.autoImports": true,
+  "js/ts.suggest.includeCompletionsForImportStatements": true,
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "js/ts.preferences.importModuleSpecifierEnding": "auto",
+  "js/ts.updateImportsOnFileMove.enabled": "always",
+
+  "prisma.schemaPath": "api/prisma/schema.prisma",
+
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "tailwindCSS.experimental.configFile": "web/src/index.css",
+  "tailwindCSS.includeLanguages": {
+    "typescriptreact": "html",
+    "javascriptreact": "html"
+  },
+
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "api/uploads": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "api/uploads": true,
+    "**/package-lock.json": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "api/uploads/**": true
+  }
+}
