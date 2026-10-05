@@ -41,8 +41,6 @@ export const verifyToken = (token: string): JwtPayload => {
     authConfig.access_secret,
     tokenTypes.ACCESS,
   ) as JwtPayload;
-  if (payload.type !== tokenTypes.ACCESS)
-    throw new HttpError(400, httpStatus.FAIL, "Invalid Token Type");
   return payload;
 };
 

@@ -16,19 +16,20 @@ import {
   resetPasswordRules,
   requestResetPasswordTokenRules,
 } from "./auth.validation";
-import { validate } from "../../common/middlewares/validate.middleware";
 import {
   emailLimiter,
   loginLimiter,
   tokenRedemptionLimiter,
 } from "../../common/middlewares/rate-limit.middleware";
+import { protect } from "../../common/middlewares/protect.middleware";
+import { validate } from "../../common/middlewares/validate.middleware";
 
 const router = Router();
 
 router.post("/register", validate(registerRules), register);
 router.post("/login", loginLimiter, validate(loginRules), login);
-router.post("/logout", logout);
-router.post("/refresh", tokenRedemptionLimiter, refreshToken);
+router.post("/logout", protect, logout);
+router.post("/refresh", protect, tokenRedemptionLimiter, refreshToken);
 router.post(
   "/forget-password",
   emailLimiter,
@@ -42,6 +43,6 @@ router.post(
   resetPassword,
 );
 router.get("/verify", tokenRedemptionLimiter, verifyUserEmail);
-router.get("/current-user", getCurrentUser);
+router.get("/current-user", protect, getCurrentUser);
 
 export default router;

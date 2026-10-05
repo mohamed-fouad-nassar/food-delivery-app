@@ -64,7 +64,6 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshErr) {
         clearAuthSession();
-        // @TODO: Redirect the user to login page
         window.location.replace("/auth/login");
         return Promise.reject(refreshErr);
       }

@@ -15,8 +15,7 @@ export function useLogin() {
     onSuccess: (res) => {
       queryClient.setQueryData(QUERY_KEYS.user, res.data);
       toast.add({ type: "success", description: res.message });
-      // @TODO: add navigation to target based on the user role in the response
-      navigate("/");
+      navigate("/app");
     },
     onError: (err: unknown) => {
       const message = getAxiosErrorMsg(err);

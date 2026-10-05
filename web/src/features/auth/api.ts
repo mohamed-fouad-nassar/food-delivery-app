@@ -1,6 +1,7 @@
 import type {
   LoginFormValues,
   RegisterFormValues,
+  CurrentUserResponse,
   LoginSuccessResponse,
   LogoutSuccessResponse,
   RegisterSuccessResponse,
@@ -56,5 +57,10 @@ export async function activateUserApi(token: string) {
   const res = await api.get<ActiveUserSuccessResponse>(
     `/auth/verify?token=${token}`,
   );
+  return res.data;
+}
+
+export async function getCurrentUserApi() {
+  const res = await api.get<CurrentUserResponse>(`/auth/current-user`);
   return res.data;
 }

@@ -58,3 +58,7 @@ export type ResetPasswordSuccessResponse = ApiResponse<null>;
 
 // Logout
 export type LogoutSuccessResponse = ApiResponse<null>;
+
+// Current User
+export type CurrentUser = { user: AuthUser };
+export type CurrentUserResponse = ApiResponse<CurrentUser>;

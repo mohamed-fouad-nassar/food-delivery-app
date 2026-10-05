@@ -73,7 +73,7 @@ export class AuthService {
       where: { email },
       select: { ...publicUserSelect, password: true },
     });
-    if (!user) throw new HttpError(404, httpStatus.FAIL, "User not found");
+    if (!user) throw new HttpError(401, httpStatus.FAIL, "Invalid credentials");
 
     if (!(await bcrypt.compare(password, user?.password)))
       throw new HttpError(401, httpStatus.FAIL, "Invalid credentials");
@@ -118,7 +118,7 @@ export class AuthService {
       select: { id: true, refreshTokenHash: true },
     });
     if (!user || hashToken(refreshToken) !== user.refreshTokenHash)
-      throw new HttpError(403, httpStatus.FAIL, "Invalid token provided");
+      throw new HttpError(401, httpStatus.FAIL, "Invalid token provided");
 
     await prisma.user.update({
       where: { id: user.id },
@@ -172,7 +172,7 @@ export class AuthService {
   static async resetPassword(password: string, resetPasswordToken: string) {
     if (!resetPasswordToken)
       throw new HttpError(
-        404,
+        400,
         httpStatus.FAIL,
         "Reset password token is required",
       );
@@ -219,13 +219,13 @@ export class AuthService {
       omit: { password: true },
     });
     if (!user || hashToken(refreshToken) !== user.refreshTokenHash)
-      throw new HttpError(400, httpStatus.FAIL, "Invalid token provided");
+      throw new HttpError(401, httpStatus.FAIL, "Invalid token provided");
     if (user.status !== UserStatus.ACTIVE)
       throw new HttpError(403, httpStatus.FAIL, "User account must be active");
 
     const expiresAt = user.refreshTokenExpiresAt;
     if (!expiresAt || expiresAt <= new Date())
-      throw new HttpError(400, httpStatus.FAIL, "Refresh token expired");
+      throw new HttpError(401, httpStatus.FAIL, "Refresh token expired");
 
     const {
       token,
@@ -247,7 +247,7 @@ export class AuthService {
   static async verifyUserEmail(verifyToken: string) {
     if (!verifyToken)
       throw new HttpError(
-        404,
+        400,
         httpStatus.FAIL,
         "Verification token is required",
       );
@@ -261,9 +261,9 @@ export class AuthService {
     });
     if (!user) throw new HttpError(404, httpStatus.FAIL, "User not found");
     if (user.email !== email)
-      throw new HttpError(400, httpStatus.FAIL, "Token mismatch!");
+      throw new HttpError(401, httpStatus.FAIL, "Token mismatch!");
     if (user.status !== UserStatus.PENDING)
-      throw new HttpError(400, httpStatus.FAIL, "User already active");
+      throw new HttpError(403, httpStatus.FAIL, "User already active");
 
     const { token, refreshToken, refreshExpiryAtInMS } =
       this.generateUserTokens(user.id, user.role);
@@ -283,7 +283,7 @@ export class AuthService {
 
   static async getCurrentUser(accessToken?: string) {
     if (!accessToken)
-      throw new HttpError(404, httpStatus.FAIL, "No token provided");
+      throw new HttpError(401, httpStatus.FAIL, "No token provided");
 
     const { id } = verifyToken(accessToken);
     const user = await prisma.user.findUnique({
