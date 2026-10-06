@@ -2,7 +2,11 @@ import type { FieldValues, UseFormReturn } from "react-hook-form";
 import axios, { isAxiosError, type InternalAxiosRequestConfig } from "axios";
 
 import APP_CONFIG from "@/lib/env";
-import { QUERY_KEYS, queryClient } from "@/lib/react-query";
+import {
+  QUERY_KEYS,
+  localStoragePersister,
+  queryClient,
+} from "@/lib/react-query";
 
 export type ApiResponse<T> = {
   status: string;
@@ -64,7 +68,9 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshErr) {
         clearAuthSession();
-        window.location.replace("/auth/login");
+        if (!originalRequest?.url?.includes("/auth/logout")) {
+          window.location.replace("/auth/login");
+        }
         return Promise.reject(refreshErr);
       }
     }
@@ -98,6 +104,7 @@ export function handleValidationErrors<T extends FieldValues>(
 
 export function clearAuthSession() {
   queryClient.removeQueries({ queryKey: QUERY_KEYS.user });
+  void localStoragePersister.removeClient();
   delete api.defaults.headers.common["Authorization"];
   delete apiRefresh.defaults.headers.common["Authorization"];
 }
